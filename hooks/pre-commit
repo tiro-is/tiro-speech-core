@@ -1,0 +1,5 @@
+#!/bin/sh -e
+for f in `git diff --cached --name-only | egrep -E '^src/.+\.(cc|h)'`; do
+  clang-format -i "$f"
+  git add "$f"
+done

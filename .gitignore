@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+# Bazel
+bazel-*
+
+# ccls
+.ccls-cache
