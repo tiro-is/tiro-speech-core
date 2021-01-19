@@ -1,8 +1,8 @@
-workspace(name = "com_github_tiro_is_tiro_talgreinir_core")
+workspace(name = "com_github_tiro_is_tiro_speech_core")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load(
-    "@com_github_tiro_is_tiro_talgreinir_core//:repositories.bzl",
+    "@com_github_tiro_is_tiro_speech_core//:repositories.bzl",
     "tiro_talgreinir_core_repositories",
 )
 

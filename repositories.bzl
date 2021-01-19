@@ -89,48 +89,6 @@ def tiro_talgreinir_core_repositories():
         strip_prefix = "googleapis-{}".format(googleapis_version),
     )
 
-    # # ICU
-    # http_archive(
-    #     name = "icu",
-    #     urls = [
-    #         "https://github.com/unicode-org/icu/releases/download/release-67-1/icu4c-67_1-src.tgz"
-    #     ],
-    #     sha256 = "94a80cd6f251a53bd2a997f6f1b5ac6653fe791dfab66e1eb0227740fb86d5dc",
-    #     strip_prefix = "icu",
-    #     build_file = "//third_party:icu.BUILD",
-    # )
-
-    # # jsonformoderncpp
-    # http_archive(
-    #     name = "com_github_nlohmann_json",
-    #     urls = ["https://github.com/nlohmann/json/releases/download/v3.9.1/include.zip"],
-    #     sha256 = "6bea5877b1541d353bd77bdfbdb2696333ae5ed8f9e8cc22df657192218cad91",
-    #     strip_prefix = "single_include",
-    #     build_file = "//third_party:com_github_nlohmann_json.BUILD",
-    # )
-
-    # # concurrentqueue
-    # http_archive(
-    #     name = "com_github_cameron314_concurrentqueue",
-    #     urls = ["https://github.com/cameron314/concurrentqueue/archive/1.0.2.tar.gz"],
-    #     sha256 = "c3aeb97c97169f743a53ca33812ea2ab61dd06dfd28319ca3f0a0771372fc7fc",
-    #     strip_prefix = "concurrentqueue-1.0.2",
-    #     build_file = "//third_party:com_github_cameron314_concurrentqueue.BUILD",
-    # )
-
-    # ffmpeg
-    # TODO(rkjaran): ffmpeg and all its deps
-    # bzlib = True
-    # fPIC = True
-    # fdk_aac = True
-    # lzma = True
-    # mp3lame = True
-    # openh264 = True
-    # opus = True
-    # postproc = False
-    # vpx = True
-    # x264 = True
-    # x265 = True
     ffmpeg_version = "4.3.1"
     http_archive(
         name = "ffmpeg",
