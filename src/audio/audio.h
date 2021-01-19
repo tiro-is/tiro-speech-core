@@ -26,55 +26,13 @@ using Vector = kaldi::Vector<float>;
 using VectorBase = kaldi::VectorBase<float>;
 
 // NOTE: This is copied from the Protobuf definition for
-//       lr.speech.v2beta1.RecognitionConfig.AudioEncoding
+//       tiro.speech.v1alpha.RecognitionConfig.AudioEncoding
 enum class AudioEncoding {
   ENCODING_UNSPECIFIED = 0,
-
-  // Uncompressed 16-bit signed little-endian samples (Linear PCM).
   LINEAR16,
-
-  // [`FLAC`](https://xiph.org/flac/documentation.html) (Free Lossless Audio
-  // Codec) is the recommended encoding because it is
-  // lossless--therefore recognition is not compromised--and
-  // requires only about half the bandwidth of `LINEAR16`. `FLAC` stream
-  // encoding supports 16-bit and 24-bit samples, however, not all fields in
-  // `STREAMINFO` are supported.
   FLAC,
-
-  // // 8-bit samples that compand 14-bit audio samples using G.711 PCMU/mu-law.
-  // MULAW,
-
-  // // Adaptive Multi-Rate Narrowband codec. `sample_rate_hertz` must be 8000.
-  // AMR,
-
-  // // Adaptive Multi-Rate Wideband codec. `sample_rate_hertz` must be 16000.
-  // AMR_WB,
-
-  // // Opus encoded audio frames in Ogg container
-  // // ([OggOpus](https://wiki.xiph.org/OggOpus)).
-  // // `sample_rate_hertz` must be 16000.
-  // OGG_OPUS,
-
-  // // Although the use of lossy encodings is not recommended, if a very low
-  // // bitrate encoding is required, `OGG_OPUS` is highly preferred over
-  // // Speex encoding. The [Speex](https://speex.org/)  encoding supported by
-  // // Cloud Speech API has a header byte in each block, as in MIME type
-  // // `audio/x-speex-with-header-byte`.
-  // // It is a variant of the RTP Speex encoding defined in
-  // // [RFC 5574](https://tools.ietf.org/html/rfc5574).
-  // // The stream is a sequence of blocks, one block per RTP packet. Each block
-  // // starts with a byte containing the length of the block, in bytes,
-  // followed
-  // // by one or more frames of Speex data, padded to an integral number of
-  // // bytes (octets) as specified in RFC 5574. In other words, each RTP header
-  // // is replaced with a single byte containing the block length. Only Speex
-  // // wideband is supported. `sample_rate_hertz` must be 16000.
-  // SPEEX_WITH_HEADER_BYTE,
-
-  // MP3
-  MP3 = 9,
-
-  GUESS = 10
+  MP3,
+  GUESS
 };
 
 /**
@@ -95,14 +53,6 @@ void Linear16BytesToWaveVector(const std::string& bytes,
 void CodedBytesToWaveVector(AudioEncoding encoding, const std::string& bytes,
                             Vector* wavevector,
                             int target_sample_rate_hertz = kDefaultSampleRate);
-
-/**
- * Convert a single channel MP3 binary blob to a Kaldi vector.
- * \p wavevector must be owned by the caller (not-null).
- */
-[[deprecated("Use CodedBytesToWaveVector")]] void Mp3BytesToWaveVector(
-    const std::string& bytes, Vector* wavevector,
-    int target_sample_rate_hertz = kDefaultSampleRate);
 
 void ResampleWaveForm(float orig_freq, const Vector& wave, float new_freq,
                       Vector* new_wave);

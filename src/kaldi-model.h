@@ -14,6 +14,7 @@
 #ifndef TIRO_SPEECH_KALDI_MODEL_H_
 #define TIRO_SPEECH_KALDI_MODEL_H_
 
+#include <fmt/format.h>
 #include <lat/word-align-lattice.h>
 #include <lm/const-arpa-lm.h>
 #include <nnet3/decodable-simple-looped.h>
@@ -48,7 +49,7 @@ struct KaldiModelConfig {
   kaldi::WordBoundaryInfoNewOpts word_boundary_config;
   std::string word_boundary_rxfilename{"graph/phones/word_boundary.int"};
 
-  void Register(OptionsItf *opts) {
+  void Register(OptionsItf* opts) {
     opts->Register("nnet3-rxfilename", &nnet3_rxfilename,
                    "Filename (possibly extended) of nnet3 acoustic model");
     opts->Register("fst-rxfilename", &fst_rxfilename,
@@ -92,7 +93,7 @@ struct KaldiModel {
   using AdaptationState = kaldi::OnlineIvectorExtractorAdaptationState;
   using Decodable = kaldi::nnet3::DecodableNnetSimpleLoopedInfo;
 
-  explicit KaldiModel(const KaldiModelConfig &config);
+  explicit KaldiModel(const KaldiModelConfig& config);
 
   /** \brief Loads a KaldiModel into memory from a filesystem path
    *
@@ -126,9 +127,38 @@ struct KaldiModel {
 
 std::shared_ptr<KaldiModel> CreateKaldiModel(const std::string_view model_path);
 
+struct ModelId {
+  std::string language_code;
+  std::string model_name;
+
+  friend bool operator==(const ModelId& lhs, const ModelId& rhs) {
+    return lhs.language_code == rhs.language_code &&
+           lhs.model_name == rhs.model_name;
+  }
+
+  friend std::ostream& operator<<(std::ostream& os, const ModelId& model_id) {
+    return os << fmt::format("{{ language_code: '{}' model_name: '{}' }}",
+                             model_id.language_code, model_id.model_name);
+  }
+};
+
 using KaldiModelMap =
-    std::unordered_map<std::string, std::shared_ptr<const KaldiModel>>;
+    std::unordered_map<ModelId, std::shared_ptr<const KaldiModel>>;
 
 }  // namespace tiro_speech
+
+// Inject specialization of std::hash for ModelId into namespace std
+namespace std {
+template <>
+struct hash<tiro_speech::ModelId> {
+  std::size_t operator()(const tiro_speech::ModelId& model_id) const noexcept {
+    std::size_t h1 =
+        std::hash<decltype(model_id.model_name)>{}(model_id.language_code);
+    std::size_t h2 =
+        std::hash<decltype(model_id.model_name)>{}(model_id.model_name);
+    return h1 ^ (h2 << 1);
+  }
+};
+}  // namespace std
 
 #endif  // TIRO_SPEECH_KALDI_MODEL_H_

@@ -42,10 +42,8 @@ class SpeechService final : public tiro::speech::v1alpha::Speech::Service {
                          const RecognizeRequest* request,
                          RecognizeResponse* response) override;
 
-  void RegisterModel(const std::string& language_code,
-                     const std::shared_ptr<const KaldiModel>& model) {
-    models_[language_code] = model;
-  };
+  void RegisterModel(ModelId model_id,
+                     const std::shared_ptr<const KaldiModel>& model);
 
  private:
   KaldiModelMap models_;

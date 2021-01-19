@@ -98,7 +98,7 @@ grpc::Status SpeechService::Recognize(grpc::ServerContext* context,
     }
 
     std::shared_ptr<const KaldiModel> model =
-        models_.at(request->config().language_code());
+        models_.at({request->config().language_code(), "generic"});
     Recognizer utt_recognizer{*model};
 
     std::unique_ptr<AudioSourceItf> audio_src{nullptr};
@@ -190,9 +190,14 @@ grpc::Status SpeechService::Recognize(grpc::ServerContext* context,
         "format."};
   } catch (const std::exception& ex) {
     TIRO_SPEECH_WARN("Unhandled exception: {}", ex.what());
-    return grpc::Status{grpc::StatusCode::UNKNOWN,
+    return grpc::Status{grpc::StatusCode::INTERNAL,
                         "Unknown error in Recognize."};
   }
+}
+
+void SpeechService::RegisterModel(
+    ModelId model_id, const std::shared_ptr<const KaldiModel>& model) {
+  models_[std::move(model_id)] = model;
 }
 
 }  // end namespace tiro_speech

@@ -47,7 +47,8 @@ MessageValidationStatus Validate(
 
   // Field 'language_code':
   if (!config.language_code().empty()) {
-    if (models != nullptr && models->count(config.language_code()) < 1) {
+    if (models != nullptr &&
+        models->count({config.language_code(), "generic"}) < 1) {
       errors.emplace_back(
           "language_code",
           fmt::format("Unsupported value '{}' for field 'language_code'.",

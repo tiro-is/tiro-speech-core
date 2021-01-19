@@ -17,6 +17,8 @@
 #include <grpcpp/security/credentials.h>
 #include <grpcpp/server.h>
 #include <grpcpp/server_builder.h>
+
+#include <utility>
 // #include <grpcpp/ext/channelz_service_plugin.h>
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
 
@@ -56,7 +58,7 @@ SpeechServerInfo::SpeechServerInfo(const SpeechServerOptions& opts)
     for (const auto model_path : Split(opts.kaldi_models, ',')) {
       TIRO_SPEECH_INFO("Loading model from {}", model_path);
       std::shared_ptr<KaldiModel> model = KaldiModel::Read(model_path);
-      models_.emplace(model->config.language_code, model);
+      models_.emplace(ModelId{model->config.language_code, "generic"}, model);
     }
   } else {
     TIRO_SPEECH_WARN("Not loading any models! This is usually a bad warning!");
@@ -104,18 +106,17 @@ SpeechServer::SpeechServer(const SpeechServerInfo& info) : info_{info} {
 
 void SpeechServer::RegisterModel(
     const std::shared_ptr<const KaldiModel>& model) {
-  RegisterModel(model->config.language_code, model);
+  RegisterModel({model->config.language_code, "generic"}, model);
 }
 
 void SpeechServer::RegisterModel(
-    const std::string& language_code,
-    const std::shared_ptr<const KaldiModel>& model) {
+    ModelId model_id, const std::shared_ptr<const KaldiModel>& model) {
   if (rpc_server_ != nullptr)
     TIRO_SPEECH_WARN(
         "Registering a model after starting server does not have any "
         "effect.");
-  models_[language_code] = model;
-  TIRO_SPEECH_INFO("Registered model for language code '{}'", language_code);
+  models_[std::move(model_id)] = model;
+  TIRO_SPEECH_INFO("Registered model for '{}'", model_id);
 }
 
 void SpeechServer::Start() {

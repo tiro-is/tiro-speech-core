@@ -116,7 +116,7 @@ class SpeechServer {
    *       SpeechServerOptions.
    */
   void RegisterModel(const std::shared_ptr<const KaldiModel>& model);
-  void RegisterModel(const std::string& language_code,
+  void RegisterModel(ModelId model_id,
                      const std::shared_ptr<const KaldiModel>& model);
 
   /** \brief Initialize the server and start serving.
