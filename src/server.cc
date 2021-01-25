@@ -115,8 +115,8 @@ void SpeechServer::RegisterModel(
     TIRO_SPEECH_WARN(
         "Registering a model after starting server does not have any "
         "effect.");
+  TIRO_SPEECH_INFO("Registered model for {}", model_id);
   models_[std::move(model_id)] = model;
-  TIRO_SPEECH_INFO("Registered model for '{}'", model_id);
 }
 
 void SpeechServer::Start() {
