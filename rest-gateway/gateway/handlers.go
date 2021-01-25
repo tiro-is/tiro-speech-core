@@ -32,27 +32,29 @@ package gateway
 import (
 	"fmt"
 	"net/http"
-	"path"
 	"strings"
+	"time"
+	"bytes"
 
 	"github.com/golang/glog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
+	speechV1alpha "gitlab.com/tiro-is/tiro-apis-gogen/tiro/speech/v1alpha"
+
 )
 
-// openAPIServer returns OpenAPI specification files located under "/openapiv2/"
 func openAPIServer(dir string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if !strings.HasSuffix(r.URL.Path, ".swagger.json") {
+		p := strings.TrimPrefix(r.URL.Path, "/openapiv2/")
+		if p != "v1alpha.swagger.json" {
 			glog.Errorf("Not Found: %s", r.URL.Path)
 			http.NotFound(w, r)
 			return
 		}
 
 		glog.Infof("Serving %s", r.URL.Path)
-		p := strings.TrimPrefix(r.URL.Path, "/openapiv2/")
-		p = path.Join(dir, p)
-		http.ServeFile(w, r, p)
+		contentReader := bytes.NewReader(speechV1alpha.OpenAPIv2Data)
+		http.ServeContent(w, r, p, time.Time{}, contentReader)
 	}
 }
 

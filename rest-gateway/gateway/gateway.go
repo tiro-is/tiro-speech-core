@@ -35,7 +35,7 @@ import (
 	"net"
 	"net/http"
 
-	speech_v1alpha "gitlab.com/tiro-is/tiro-apis-gogen/tiro/speech/v1alpha"
+	speechV1alpha "gitlab.com/tiro-is/tiro-apis-gogen/tiro/speech/v1alpha"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	_ "google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
@@ -47,7 +47,7 @@ func newGateway(ctx context.Context, conn *grpc.ClientConn, opts []gwruntime.Ser
 	mux := gwruntime.NewServeMux(opts...)
 
 	for _, f := range []func(context.Context, *gwruntime.ServeMux, *grpc.ClientConn) error{
-		speech_v1alpha.RegisterSpeechHandler,
+		speechV1alpha.RegisterSpeechHandler,
 	} {
 		if err := f(ctx, mux, conn); err != nil {
 			return nil, err

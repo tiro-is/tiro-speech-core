@@ -55,14 +55,38 @@ go_proto_library(
     ],
 )
 
-go_library(
-    name = "go_default_library",
-    embed = [":speech_go_proto"],
-    importpath = "gitlab.com/tiro-is/tiro-apis-gogen/tiro/speech/v1alpha",
-)
-
 protoc_gen_openapiv2(
     name = "speech_protoc_gen_openapiv2",
     proto = ":speech_proto",
+    # openapi_configuration = "",
+    # grpc_api_configuration = "",
     single_output = True,  # Outputs a single swagger.json file.
+)
+
+# TODO(rkjaran): Make this a generic rule, usable with all protoc_gen_openapiv2
+#                targets, or create a rule to wrap protoc_gen_openapiv2
+genrule(
+    name = "speech_go_openapiv2",
+    srcs = [
+        "//src/proto/tiro/speech/v1alpha:speech_protoc_gen_openapiv2",
+    ],
+    outs = [
+        "openapiv2.go",
+    ],
+    cmd = """echo -e 'package speech\n' >$@
+    echo -en 'var OpenAPIv2Data = []byte{\n' >>$@
+    hexdump -v -e '"0x" 1/1 "%02X," " "' $< >>$@
+    echo -en '\n}\n\n'  >>$@
+    """,
+)
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        ":speech_go_openapiv2",
+    ],
+    embed = [
+        ":speech_go_proto",
+    ],
+    importpath = "gitlab.com/tiro-is/tiro-apis-gogen/tiro/speech/v1alpha",
 )
