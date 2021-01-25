@@ -1,35 +1,40 @@
 # Tiro Speech Core
 
+Tiro Speech Core is a speech recognition server that implements a
+[gRPC](./src/proto/speech/v1alpha/speech.proto) API. Support for REST is
+provided with through a gRPC REST gateway.
+
 ## Dependencies
 
 Tiro Speech Core uses the Bazel build system and will fetch all required
 dependencies over the network.
 
-## Building
+## Bulding and Running
 
-Build the server application:
-
-    bazel build //:tiro_speech_server
-    
-Build a simple example C++ client:
-
-    bazel build //:tiro_speech_client
-
-## Running
-
-Run the server with a pre-downloaded model:
+Build and run the server with a pre-downloaded model:
 
     bazel run //:tiro_speech_server -- --kaldi-models=path/to/model/dir --listen-address=0.0.0.0:50051
 
-Test with the example client:
+Build and test with the example client:
 
     bazel run //:tiro_speech_client -- path/to/example.mp3 
+
+Build and run the REST gateway:
+
+    bazel run //rest-gateway/cmd:rest_gateway_server -- --endpoint=localhost:50051
+
+The REST gateway server should now be running on port 8080.
 
 ## Development
 
 Enable the git hooks to automatically format source code:
 
     git config core.hooksPath hooks
+
+## License
+
+Tiro Speech Core is licensed under the Apache License, Version 2.0. See
+[LICENSE](LICENSE) for more details.
 
 ## Acknowledgements
 
