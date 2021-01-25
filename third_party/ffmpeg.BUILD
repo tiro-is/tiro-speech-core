@@ -25,17 +25,23 @@ configure_make(
         "LDFLAGS": "-lpthread",
     },
     configure_options = [
-        "--disable-static",
+        "--enable-static",
         "--enable-shared",
         "--enable-openssl",
         "--enable-zlib",
         "--enable-bzlib",
         "--disable-doc",
         "--disable-programs",
+        "--disable-autodetect",
+        "--disable-symver",
     ],
     lib_source = ":all",
     shared_libraries = [
         "lib{}.so".format(lib)
+        for lib in FFMPEG_LIBS
+    ],
+    static_libraries = [
+        "lib{}.a".format(lib)
         for lib in FFMPEG_LIBS
     ],
     deps = [
