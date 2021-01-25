@@ -1,5 +1,8 @@
-# TODO(rkjaran): Kaldi defaults to compiling a debug build.  Need to compile it
-#                with -DNDEBUG -O3 -g0 to get a much faster and smaller library
+# Kaldi
+#
+# TODO(rkjaran): Split up the kaldi subdirs so we don't have to depend on and
+#                build everything. (Or, perhaps we'll just grab kaldi into the tree
+#                and write a BUILD file)
 package(
     default_visibility = ["//visibility:public"],
 )
@@ -11,21 +14,12 @@ filegroup(
     srcs = glob(["**"]),
 )
 
-# Kaldi
-#
-# TODO(rkjaran): Split up the kaldi subdirs so we don't have to depend on and
-#                build everything. (Or, perhaps we'll just grab kaldi into the tree
-#                and write a BUILD file)
-kaldi_configure_opts = [
-    "--static",
-    "--static-fst",
-    "--fst-root=$$EXT_BUILD_DEPS$$/openfst",
-    "--fst-version=1.6.7",  # TODO: obtain from WORKSPACE
-    "--static-math",
-    "--mathlib=OPENBLAS",
-    "--openblas-root=$$EXT_BUILD_DEPS$$/openblas",
-    "--use-cuda=no",
-]
+config_setting(
+    name = "opt_build",
+    values = {
+        "compilation_mode": "opt",
+    },
+)
 
 kaldi_static_libraries = [
     "base/kaldi-base.a",
@@ -579,11 +573,19 @@ kaldi_libs = [
     "base",
 ]
 
+kaldi_configure_opts = [
+    "--static",
+    "--static-fst",
+    "--fst-root=$$EXT_BUILD_DEPS$$/openfst",
+    "--fst-version=1.6.7",  # TODO: obtain from WORKSPACE
+    "--static-math",
+    "--mathlib=OPENBLAS",
+    "--openblas-root=$$EXT_BUILD_DEPS$$/openblas",
+    "--use-cuda=no",
+]
+
 make(
     name = "kaldi",
-    # binaries = [
-    #     bin.split("/")[1] for bin in kaldi_binaries
-    # ],
     defines = [
         "KALDI_DOUBLEPRECISION=0",
         "HAVE_EXECINFO_H=0",
@@ -592,20 +594,23 @@ make(
     ],
     lib_source = "@kaldi//:all",
     make_commands = [
-        "./configure " + " ".join(kaldi_configure_opts),
+        "./configure {}".format(" ".join([opt for opt in kaldi_configure_opts])),
+    ] + select({
+        ":opt_build": ["echo 'CXXFLAGS += -O3 -g0 -DNDEBUG' >> kaldi.mk"],
+        "//conditions:default": [],
+    }) + [
         "make depend",
-        "make " + " ".join(kaldi_libs),
-        "cp " + " ".join([lib + "/kaldi-" + lib + ".a" for lib in kaldi_libs]) +
-        " $$INSTALLDIR$$/lib/",
-        "for lib in  " + " ".join(kaldi_libs) +
-        "; do mkdir -p $$INSTALLDIR$$/include/$lib; cp $lib/*.h $$INSTALLDIR$$/include/$lib/; done",
+        "make {}".format(" ".join(kaldi_libs)),
+        "cp {} $$INSTALLDIR$$/lib/".format(
+            " ".join([lib + "/kaldi-" + lib + ".a" for lib in kaldi_libs]),
+        ),
+        """for lib in {}; do
+          mkdir -p $$INSTALLDIR$$/include/$lib; cp $lib/*.h $$INSTALLDIR$$/include/$lib/
+        done""".format(" ".join(kaldi_libs)),
         "mkdir -p $$INSTALLDIR$$/include/itf && cp itf/*.h $$INSTALLDIR$$/include/itf/",
-
-        # "cp " + " ".join(kaldi_binaries) + " $$INSTALLDIR$$/bin/",
     ],
     out_include_dir = "include",
     out_lib_dir = "lib",
-    # out_bin_dir = "bin",
     static_libraries = [
         "kaldi-" + lib + ".a"
         for lib in kaldi_libs
