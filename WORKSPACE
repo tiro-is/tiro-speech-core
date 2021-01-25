@@ -1,12 +1,12 @@
-workspace(name = "com_github_tiro_is_tiro_speech_core")
+workspace(name = "com_gitlab_tiro_is_tiro_speech_core")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load(
-    "@com_github_tiro_is_tiro_speech_core//:repositories.bzl",
-    "tiro_talgreinir_core_repositories",
+    "@com_gitlab_tiro_is_tiro_speech_core//:repositories.bzl",
+    "tiro_speech_core_repositories",
 )
 
-tiro_talgreinir_core_repositories()
+tiro_speech_core_repositories()
 
 ###################
 # rules_foreign_cc
@@ -90,13 +90,6 @@ gazelle_dependencies()
 
 ###############################
 # Dependecies for grpc-gateway
-load(
-    "@rules_proto_grpc//github.com/grpc-ecosystem/grpc-gateway:repositories.bzl",
-    rules_proto_grpc_gateway_repos = "gateway_repos",
-)
-
-rules_proto_grpc_gateway_repos()
-
 load(
     "@grpc_ecosystem_grpc_gateway//:repositories.bzl",
     grpc_gateway_go_repos = "go_repositories",

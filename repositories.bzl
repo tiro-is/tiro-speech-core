@@ -1,7 +1,7 @@
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-def tiro_talgreinir_core_repositories():
+def tiro_speech_core_repositories():
     # commit d54c78ab86b40770ee19f0949db9d74a831ab9f0
     rules_foreign_cc_version = "master"
     http_archive(
