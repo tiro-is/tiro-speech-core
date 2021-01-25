@@ -24,7 +24,6 @@ cc_library(
         exclude = ["src/bin/**"],
     ),
     copts = COMMON_COPTS,
-    linkstatic = True,
     deps = [
         "//src/proto/tiro/speech/v1alpha:speech_cc_grpc",
         "//third_party/webrtc:webrtcvad",
@@ -32,6 +31,7 @@ cc_library(
         "@com_github_grpc_grpc//:grpc++_reflection",
         "@com_google_googleapis//google/rpc:code_cc_proto",
         "@com_google_googleapis//google/rpc:error_details_cc_proto",
+        "@com_google_googleapis//google/rpc:status_cc_proto",
         "@ffmpeg",
         "@fmt",
         "@kaldi",
@@ -58,15 +58,8 @@ cc_binary(
     visibility = ["//visibility:public"],
     deps = [
         "@com_github_grpc_grpc//:grpc++",
-        "@com_github_tiro_is_tiro_speech_core//src/proto/tiro/speech/v1alpha:speech_cc_grpc",
+        "@com_gitlab_tiro_is_tiro_speech_core//src/proto/tiro/speech/v1alpha:speech_cc_grpc",
         "@com_google_googleapis//google/rpc:error_details_cc_proto",
         "@com_google_googleapis//google/rpc:status_cc_proto",
     ],
-)
-
-load("@rules_proto_grpc//github.com/grpc-ecosystem/grpc-gateway:defs.bzl", "gateway_grpc_compile")
-
-gateway_grpc_compile(
-    name = "api_gateway_grpc",
-    deps = ["@rules_proto_grpc//github.com/grpc-ecosystem/grpc-gateway/example/api:api_proto"],
 )
