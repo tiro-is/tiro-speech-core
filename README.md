@@ -30,3 +30,9 @@ Test with the example client:
 Enable the git hooks to automatically format source code:
 
     git config core.hooksPath hooks
+
+## Acknowledgements
+
+This project was funded by the Language Technology Programme for Icelandic
+2019-2023. The programme, which is managed and coordinated by Almannarómur, is
+funded by the Icelandic Ministry of Education, Science and Culture.
