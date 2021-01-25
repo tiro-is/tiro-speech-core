@@ -23,7 +23,7 @@ import "google/api/field_behavior.proto";
 import "google/protobuf/duration.proto";
 
 option cc_enable_arenas = true;
-option go_package = "gitlab.com/tiro-is/tiro-apis-gogen/speech/v1alpha;speech";
+option go_package = "gitlab.com/tiro-is/tiro-apis-gogen/tiro/speech/v1alpha;speech";
 option java_multiple_files = true;
 option java_outer_classname = "SpeechProto";
 option java_package = "is.tiro.speech.v1alpha";
