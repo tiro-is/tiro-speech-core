@@ -158,12 +158,22 @@ def tiro_speech_core_repositories():
         sha256 = "f5b666935a827bc2b6e2ca86ea56c796d47f2821c2ff30452d270e51c2a49708",
     )
 
-    io_bazel_rules_go_version = "0.25.1"
+    io_bazel_rules_go_version = "0.24.11"
     http_archive(
         name = "io_bazel_rules_go",
-        sha256 = "7904dbecbaffd068651916dce77ff3437679f9d20e1a7956bff43826e7645fcc",
+        sha256 = "dbf5a9ef855684f84cac2e7ae7886c5a001d4f66ae23f6904da0faaaef0d61fc",
         urls = [
             "https://mirror.bazel.build/github.com/bazelbuild/rules_go/releases/download/v{v}/rules_go-v{v}.tar.gz".format(v = io_bazel_rules_go_version),
             "https://github.com/bazelbuild/rules_go/releases/download/v{v}/rules_go-v{v}.tar.gz".format(v = io_bazel_rules_go_version),
         ],
+    )
+
+    grpc_ecosystem_grpc_gateway_version = "2.1.0"
+    http_archive(
+        name = "grpc_ecosystem_grpc_gateway",
+        sha256 = "2bca9747a3726497bd2cce43502858be936e23f13b6be292eb42bd422018e439",
+        urls = [
+            "https://github.com/grpc-ecosystem/grpc-gateway/archive/v{}.tar.gz".format(grpc_ecosystem_grpc_gateway_version),
+        ],
+        strip_prefix = "grpc-gateway-{}".format(grpc_ecosystem_grpc_gateway_version),
     )

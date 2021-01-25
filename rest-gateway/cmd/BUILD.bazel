@@ -1,0 +1,19 @@
+# Based on example: https://github.com/grpc-ecosystem/grpc-gateway/tree/b4d54a0e3d1ea061661de197ce13e09e27ba8c41/examples/internal/gateway
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["main.go"],
+    importpath = "gitlab.com/tiro-is/tiro-speech-core/rest-gateway/cmd",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//rest-gateway/gateway:go_default_library",
+        "@com_github_golang_glog//:go_default_library",
+    ],
+)
+
+go_binary(
+    name = "rest_gateway_server",
+    embed = [":go_default_library"],
+    visibility = ["//visibility:public"],
+)

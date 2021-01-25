@@ -3,3 +3,4 @@ query --repository_cache=~/.cache/bazel-repo
 build --repository_cache=~/.cache/bazel-repo --disk_cache=~/.cache/bazel-disk --cxxopt=-std=c++17
 build --action_env=PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 build --action_env=LD_LIBRARY_PATH=
+build --keep_going
