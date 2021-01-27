@@ -24,4 +24,8 @@ make(
         "libopenblas.a",
         "libopenblas-r0.3.7.a",
     ],
+    deps = [
+        "@gfortran_math_runtime//:gfortran",
+        "@gfortran_math_runtime//:quadmath",
+    ],
 )

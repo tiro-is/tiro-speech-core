@@ -1,4 +1,5 @@
 load("@com_github_bazelbuild_buildtools//buildifier:def.bzl", "buildifier")
+load("@io_bazel_rules_docker//cc:image.bzl", "cc_image")
 
 licenses(["notice"])  # Apache 2.0
 
@@ -50,6 +51,13 @@ cc_binary(
     ],
 )
 
+cc_image(
+    name = "tiro_speech_server_image",
+    base = "@ubuntu_focal_x86_64//image",
+    binary = ":tiro_speech_server",
+    visibility = ["//visibility:public"],
+)
+
 cc_binary(
     name = "tiro_speech_client",
     srcs = [
@@ -62,4 +70,11 @@ cc_binary(
         "@com_google_googleapis//google/rpc:error_details_cc_proto",
         "@com_google_googleapis//google/rpc:status_cc_proto",
     ],
+)
+
+cc_image(
+    name = "tiro_speech_client_image",
+    base = "@ubuntu_focal_x86_64//image",
+    binary = ":tiro_speech_client",
+    visibility = ["//visibility:public"],
 )

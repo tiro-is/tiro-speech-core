@@ -57,6 +57,13 @@ def tiro_speech_core_repositories():
         build_file = "//third_party:spdlog.BUILD",
     )
 
+    rules_python_version = "0.1.0"
+    http_archive(
+        name = "rules_python",
+        url = "https://github.com/bazelbuild/rules_python/releases/download/{v}/rules_python-{v}.tar.gz".format(v = rules_python_version),
+        sha256 = "b6d46438523a3ec0f3cead544190ee13223a52f6a6765a29eae7b7cc24cc83a0",
+    )
+
     # gRPC
     #
     # Import this before we import "rules_proto_grpc" to control gRPC versioning
@@ -176,4 +183,14 @@ def tiro_speech_core_repositories():
             "https://github.com/grpc-ecosystem/grpc-gateway/archive/v{}.tar.gz".format(grpc_ecosystem_grpc_gateway_version),
         ],
         strip_prefix = "grpc-gateway-{}".format(grpc_ecosystem_grpc_gateway_version),
+    )
+
+    io_bazel_rules_docker_version = "0.15.0"
+    http_archive(
+        name = "io_bazel_rules_docker",
+        sha256 = "1698624e878b0607052ae6131aa216d45ebb63871ec497f26c67455b34119c80",
+        strip_prefix = "rules_docker-{}".format(io_bazel_rules_docker_version),
+        urls = [
+            "https://github.com/bazelbuild/rules_docker/releases/download/v{v}/rules_docker-v{v}.tar.gz".format(v = io_bazel_rules_docker_version),
+        ],
     )

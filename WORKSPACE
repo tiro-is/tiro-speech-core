@@ -8,6 +8,13 @@ load(
 
 tiro_speech_core_repositories()
 
+# This obviously only works on Linux x86_64
+new_local_repository(
+    name = "gfortran_math_runtime",
+    build_file = "//third_party:gfortran_math_runtime.BUILD",
+    path = "/usr/lib/x86_64-linux-gnu",
+)
+
 ###################
 # rules_foreign_cc
 #
@@ -96,3 +103,44 @@ load(
 )
 
 grpc_gateway_go_repos()
+
+##############################
+# Dependencies for io_bazel_rules_docker
+load(
+    "@io_bazel_rules_docker//repositories:repositories.bzl",
+    container_repositories = "repositories",
+)
+
+container_repositories()
+
+load("@io_bazel_rules_docker//repositories:deps.bzl", container_deps = "deps")
+
+container_deps()
+
+load(
+    "@io_bazel_rules_docker//cc:image.bzl",
+    _cc_image_repos = "repositories",
+)
+
+_cc_image_repos()
+
+load(
+    "@io_bazel_rules_docker//go:image.bzl",
+    _go_image_repos = "repositories",
+)
+
+_go_image_repos()
+
+load(
+    "@io_bazel_rules_docker//container:container.bzl",
+    "container_pull",
+)
+
+# Base image for our cc_images
+container_pull(
+    name = "ubuntu_focal_x86_64",
+    digest = "sha256:3093096ee188f8ff4531949b8f6115af4747ec1c58858c091c8cb4579c39cc4e",
+    registry = "index.docker.io",
+    repository = "library/ubuntu",
+)
+
