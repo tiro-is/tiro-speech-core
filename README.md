@@ -32,6 +32,85 @@ Build and run the REST gateway:
 
 The REST gateway server should now be running on port 8080.
 
+## Do I have to run this my self??
+
+No. The service is available at `speech.tiro.is:443`.
+
+### Example usage of the REST gateway
+
+Using `curl` on Linux:
+
+    cat <<EOF | curl -XPOST https://speech.tiro.is/v1alpha/speech:recognize -d@-
+    {
+        "config": {
+            "languageCode": "is-IS",
+            "sampleRateHertz": "16000",
+            "encoding": "LINEAR16",
+            "maxAlternatives": 2,
+            "enableWordTimeOffsets": true
+        },
+        "audio": {
+            "content": "$(base64 -w0 < examples/is_is-mbl_01-2011-12-02T14:22:29.744483.wav)"
+        }
+    }
+    EOF
+
+Which returns the following:
+
+    {
+      "results": [
+        {
+          "alternatives": [
+            {
+              "transcript": "gera lítið úr meintri spennu",
+              "confidence": 0,
+              "words": [
+                {
+                  "startTime": "1.020s",
+                  "endTime": "1.289s",
+                  "word": "gera",
+                  "confidence": 0
+                },
+                {
+                  "startTime": "1.289s",
+                  "endTime": "1.649s",
+                  "word": "lítið",
+                  "confidence": 0
+                },
+                {
+                  "startTime": "1.650s",
+                  "endTime": "1.799s",
+                  "word": "úr",
+                  "confidence": 0
+                },
+                {
+                  "startTime": "1.799s",
+                  "endTime": "2.129s",
+                  "word": "meintri",
+                  "confidence": 0
+                },
+                {
+                  "startTime": "2.130s",
+                  "endTime": "2.610s",
+                  "word": "spennu",
+                  "confidence": 0
+                }
+              ]
+            },
+            {
+              "transcript": "gerir lítið úr meintri spennu",
+              "confidence": 0,
+              "words": []
+            }
+          ]
+        }
+      ]
+    }
+
+### Example usage of the gRPC API 
+
+See [examples/python/README.md](examples/python/README.md) for a Python example.
+
 ## Development
 
 Enable the git hooks to automatically format source code:
