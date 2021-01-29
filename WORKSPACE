@@ -3,10 +3,13 @@ workspace(name = "com_gitlab_tiro_is_tiro_speech_core")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load(
     "@com_gitlab_tiro_is_tiro_speech_core//:repositories.bzl",
+    "extra_repositories",
     "tiro_speech_core_repositories",
 )
 
 tiro_speech_core_repositories()
+
+extra_repositories()
 
 new_local_repository(
     name = "intel_mkl",

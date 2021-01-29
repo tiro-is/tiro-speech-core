@@ -32,9 +32,12 @@
 *.app
 
 # Bazel
-bazel-*
+/bazel-*
 
 # ccls
 .ccls-cache
+
+# mypy
+.mypy_cache/
 
 compile_commands.json

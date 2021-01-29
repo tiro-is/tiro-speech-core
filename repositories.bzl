@@ -193,3 +193,18 @@ def tiro_speech_core_repositories():
             "https://github.com/bazelbuild/rules_docker/releases/download/v{v}/rules_docker-v{v}.tar.gz".format(v = io_bazel_rules_docker_version),
         ],
     )
+
+def extra_repositories():
+    com_grail_bazel_compdb_version = "0.4.5"
+    http_archive(
+        name = "com_grail_bazel_compdb",
+        strip_prefix = "bazel-compilation-database-{}".format(
+            com_grail_bazel_compdb_version,
+        ),
+        urls = [
+            "https://github.com/grailbio/bazel-compilation-database/archive/{}.tar.gz".format(
+                com_grail_bazel_compdb_version,
+            ),
+        ],
+        sha256 = "bcecfd622c4ef272fd4ba42726a52e140b961c4eac23025f18b346c968a8cfb4",
+    )

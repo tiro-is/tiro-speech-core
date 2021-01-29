@@ -1,6 +1,8 @@
-common --repository_cache=~/.cache/bazel-repo --disk_cache=~/.cache/bazel-disk
-common --incompatible_restrict_string_escapes=false --experimental_use_sandboxfs
-build --cxxopt=-std=c++17
+build --incompatible_restrict_string_escapes=false
+query --incompatible_restrict_string_escapes=false
+build --repository_cache=~/.cache/bazel-repo --disk_cache=~/.cache/bazel-disk
+fetch --repository_cache=~/.cache/bazel-repo --disk_cache=~/.cache/bazel-disk
+build --cxxopt=-std=c++17 --cxxopt=-m64
 build --action_env=PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 build --action_env=LD_LIBRARY_PATH=
 build --keep_going

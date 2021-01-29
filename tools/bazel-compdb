@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -e
+bazel build //:compdb
+outfile="$(bazel info bazel-bin)/compile_commands.json"
+execroot=$(bazel info execution_root)
+sed -i.bak "s@__EXEC_ROOT__@${execroot}@" "${outfile}"
+ln -s -f "${outfile}" compile_commands.json
