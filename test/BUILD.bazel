@@ -1,0 +1,37 @@
+# TODO(rkjaran): increase test coverage
+cc_library(
+    name = "main",
+    deps = [
+        "@catch2//:catch2_with_main",
+    ],
+)
+
+cc_test(
+    name = "audio_source",
+    size = "small",
+    srcs = ["test-audio-source.cc"],
+    data = [
+        "only_speech_16000hz.wav",
+        "only_speech_32000hz.wav",
+        "only_speech_8000hz.wav",
+    ],
+    deps = [
+        ":main",
+        "//:tiro_speech",
+    ],
+)
+
+cc_test(
+    name = "ffmpeg_wrapper",
+    size = "small",
+    srcs = ["test-ffmpeg-wrapper.cc"],
+    data = [
+        "example.flac",
+        "example.mp3",
+        "example_44100Hz.mp3",
+    ],
+    deps = [
+        ":main",
+        "//:tiro_speech",
+    ],
+)

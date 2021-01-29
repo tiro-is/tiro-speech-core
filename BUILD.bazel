@@ -29,6 +29,7 @@ cc_library(
     local_defines = [
         "TIRO_SPEECH_ENABLE_HTTP_URI",
     ],
+    visibility = ["//test:__pkg__"],
     deps = [
         "//proto/tiro/speech/v1alpha:speech_cc_grpc",
         "//third_party/webrtc:webrtcvad",
