@@ -208,3 +208,12 @@ def extra_repositories():
         ],
         sha256 = "bcecfd622c4ef272fd4ba42726a52e140b961c4eac23025f18b346c968a8cfb4",
     )
+
+    # Needed for k8s deployment
+    rules_gitops_version = "8d9416a36904c537da550c95dc7211406b431db9"
+    http_archive(
+        name = "com_adobe_rules_gitops",
+        sha256 = "25601ed932bab631e7004731cf81a40bd00c9a34b87c7de35f6bc905c37ef30d",
+        strip_prefix = "rules_gitops-{}".format(rules_gitops_version),
+        urls = ["https://github.com/adobe/rules_gitops/archive/{}.zip".format(rules_gitops_version)],
+    )

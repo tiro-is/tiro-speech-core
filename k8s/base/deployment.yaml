@@ -1,0 +1,64 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: tiro-speech-core-deployment
+  labels:
+    app: tiro-speech-core
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tiro-speech-core
+  template:
+    metadata:
+      labels:
+        app: tiro-speech-core
+    spec:
+      initContainers:
+      - name: fetch-models
+        image: google/cloud-sdk:latest
+        command:
+        - bash
+        - -xeu
+        - -c
+        - |
+          mkdir -p /models/
+          IS_IS=kaldi.chain.is-IS.sim_2021-01-29
+          gsutil -m cp -r gs://models-talgreinir-is/is-IS/$IS_IS /models/
+          mv /models/$IS_IS /models/is-IS
+        volumeMounts:
+        - name: models
+          mountPath: /models
+          readOnly: false
+      containers:
+      - name: speech-server
+        image: tiro-speech-server
+        imagePullPolicy: Always
+        args:
+        - --log-level=INFO
+        - --kaldi-models=/models/is-IS
+        - --listen-address=0.0.0.0:50051
+        ports:
+        - containerPort: 50051
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /models
+          name: models
+          readOnly: true
+        resources:
+          requests:
+            memory: "2600Mi"
+            cpu: "1000m"
+      - name: restproxy
+        image: tiro-speech-rest-gateway
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        args:
+        - -endpoint=localhost:50051
+        - -logtostderr
+        - -v=2
+      volumes:
+      - name: models
+        emptyDir: {}

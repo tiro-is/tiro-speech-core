@@ -1,0 +1,40 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: tiro-speech-core-h2c-ingress
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    ingress.kubernetes.io/protocol: h2c
+spec:
+  rules:
+  - host: speech.tiro.is
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: tiro-speech-core-svc
+          servicePort: grpc
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: tiro-speech-core-ingress
+  annotations:
+    kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: speech.tiro.is
+    http:
+      paths:
+      - path: /v1alpha/
+        backend:
+          serviceName: tiro-speech-core-svc
+          servicePort: rest
+      - path: /openapiv2
+        backend:
+          serviceName: tiro-speech-core-svc
+          servicePort: rest
+      - path: /healthz
+        backend:
+          serviceName: tiro-speech-core-svc
+          servicePort: rest

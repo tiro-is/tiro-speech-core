@@ -1,0 +1,31 @@
+# These are deployment rules specific to speech.tiro.is
+
+load("@com_adobe_rules_gitops//gitops:defs.bzl", "k8s_deploy")
+
+k8s_deploy(
+    name = "tiro_speech_server_prod",
+    cluster = "gke_talgreining-is_europe-west1-b_talgreinir-is-cluster",
+    deployment_branch = "master",
+    image_digest_tag = True,
+    image_registry = "eu.gcr.io",
+    image_repository = "talgreining-is/bzl/tiro-speech",
+    images = {
+        "tiro-speech-server": "//:tiro_speech_server_image",
+        "tiro-speech-rest-gateway": "//rest-gateway/cmd:rest_gateway_server_image",
+    },
+    manifests = glob(
+        [
+            "base/*.yaml",
+        ],
+        exclude = ["**/kustomization.yaml"],
+    ),
+    namespace = "default",
+    patches = glob(
+        [
+            "overlays/prod/*.yaml",
+        ],
+        exclude = ["**/kustomization.yaml"],
+    ),
+    user = "gke_talgreining-is_europe-west1-b_talgreinir-is-cluster",
+    visibility = ["//visibility:public"],
+)

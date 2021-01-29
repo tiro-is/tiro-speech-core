@@ -153,3 +153,12 @@ container_pull(
     repository = "library/ubuntu",
 )
 
+###########################
+# rules_gitops dependencies
+load("@com_adobe_rules_gitops//gitops:deps.bzl", "rules_gitops_dependencies")
+
+rules_gitops_dependencies()
+
+load("@com_adobe_rules_gitops//gitops:repositories.bzl", "rules_gitops_repositories")
+
+rules_gitops_repositories()
