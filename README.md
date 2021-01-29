@@ -1,7 +1,7 @@
 # Tiro Speech Core
 
 Tiro Speech Core is a speech recognition server that implements a
-[gRPC](./src/proto/tiro/speech/v1alpha/speech.proto) API. Support for REST is
+[gRPC](./proto/tiro/speech/v1alpha/speech.proto) API. Support for REST is
 provided with through a gRPC REST gateway.
 
 ## Dependencies

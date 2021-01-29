@@ -12,7 +12,7 @@ go_library(
     importpath = "gitlab.com/tiro-is/tiro-speech-core/rest-gateway/gateway",
     visibility = ["//visibility:public"],
     deps = [
-        "//src/proto/tiro/speech/v1alpha:go_default_library",
+        "//proto/tiro/speech/v1alpha:go_default_library",
         "@com_github_golang_glog//:go_default_library",
         "@go_googleapis//google/rpc:errdetails_go_proto",
         "@grpc_ecosystem_grpc_gateway//runtime:go_default_library",

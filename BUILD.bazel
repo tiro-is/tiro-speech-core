@@ -25,8 +25,11 @@ cc_library(
         exclude = ["src/bin/**"],
     ),
     copts = COMMON_COPTS,
+    local_defines = [
+        "TIRO_SPEECH_ENABLE_HTTP_URI",
+    ],
     deps = [
-        "//src/proto/tiro/speech/v1alpha:speech_cc_grpc",
+        "//proto/tiro/speech/v1alpha:speech_cc_grpc",
         "//third_party/webrtc:webrtcvad",
         "@com_github_grpc_grpc//:grpc++",
         "@com_github_grpc_grpc//:grpc++_reflection",
@@ -65,8 +68,8 @@ cc_binary(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        "//proto/tiro/speech/v1alpha:speech_cc_grpc",
         "@com_github_grpc_grpc//:grpc++",
-        "@com_gitlab_tiro_is_tiro_speech_core//src/proto/tiro/speech/v1alpha:speech_cc_grpc",
         "@com_google_googleapis//google/rpc:error_details_cc_proto",
         "@com_google_googleapis//google/rpc:status_cc_proto",
     ],

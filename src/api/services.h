@@ -24,10 +24,10 @@
 #include <thread>
 #include <utility>
 
+#include "proto/tiro/speech/v1alpha/speech.grpc.pb.h"
 #include "src/audio/audio-source.h"
 #include "src/base.h"
 #include "src/kaldi-model.h"
-#include "src/proto/tiro/speech/v1alpha/speech.grpc.pb.h"
 #include "src/recognizer.h"
 #include "src/utils.h"
 

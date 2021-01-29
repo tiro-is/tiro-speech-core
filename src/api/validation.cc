@@ -71,14 +71,6 @@ MessageValidationStatus Validate(
 
   // Field 'speech_contexts':  Nothing to check
   // Field 'enable_word_time_offsets': Should always be supported
-
-  // Field 'enable_automatic_punctuation':
-  if (config.enable_automatic_punctuation()) {
-    errors.emplace_back("enable_automatic_punctuation",
-                        "Field 'enable_automatic_punctuation' "
-                        "currently unsupported.");
-  }
-
   // Field 'metadata': Nothing to check
 
   return errors;

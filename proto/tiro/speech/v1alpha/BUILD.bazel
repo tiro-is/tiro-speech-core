@@ -68,7 +68,7 @@ protoc_gen_openapiv2(
 genrule(
     name = "speech_go_openapiv2",
     srcs = [
-        "//src/proto/tiro/speech/v1alpha:speech_protoc_gen_openapiv2",
+        "//proto/tiro/speech/v1alpha:speech_protoc_gen_openapiv2",
     ],
     outs = [
         "openapiv2.go",

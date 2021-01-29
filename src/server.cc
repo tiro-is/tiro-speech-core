@@ -22,11 +22,11 @@
 // #include <grpcpp/ext/channelz_service_plugin.h>
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
 
+#include "proto/tiro/speech/v1alpha/speech.grpc.pb.h"
 #include "src/api/services.h"
 #include "src/base.h"
 #include "src/kaldi-model.h"
 #include "src/logging.h"
-#include "src/proto/tiro/speech/v1alpha/speech.grpc.pb.h"
 #include "src/recognizer.h"
 #include "src/utils.h"
 

@@ -19,8 +19,8 @@
 #include <string>
 #include <vector>
 
+#include "proto/tiro/speech/v1alpha/speech.pb.h"
 #include "src/kaldi-model.h"
-#include "src/proto/tiro/speech/v1alpha/speech.pb.h"
 
 namespace tiro_speech {
 

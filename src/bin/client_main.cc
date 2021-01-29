@@ -22,7 +22,7 @@
 
 #include "google/rpc/error_details.pb.h"
 #include "google/rpc/status.pb.h"
-#include "src/proto/tiro/speech/v1alpha/speech.grpc.pb.h"
+#include "proto/tiro/speech/v1alpha/speech.grpc.pb.h"
 
 using namespace tiro::speech::v1alpha;
 
