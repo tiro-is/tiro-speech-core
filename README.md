@@ -6,22 +6,29 @@ provided with through a gRPC REST gateway.
 
 ## Dependencies
 
-Tiro Speech Core uses the Bazel build system and will fetch all required
-dependencies over the network.
+Tiro Speech Core uses the Bazel build system and will fetch most required
+dependencies over the network. It's possible to use either Intel MKL or OpenBLAS
+as the linear algebra library. MKL has to be downloaded from Intel and installed
+in `/opt/intel/mkl`. OpenBLAS is downloaded and compiled automatically.
 
 ## Bulding and Running
 
-Build and run the server with a pre-downloaded model:
+The following command builds the server along with all its dependencies and run
+it with a pre-downloaded model (using MKL):
 
-    bazel run //:tiro_speech_server -- --kaldi-models=path/to/model/dir --listen-address=0.0.0.0:50051
+    bazel run -c opt //:tiro_speech_server -- --kaldi-models=path/to/model/dir --listen-address=0.0.0.0:50051
+    
+To use OpenBLAS instead:
+
+    bazel run -c opt --@kaldi//:mathlib=openblas //:tiro_speech_server -- --kaldi-models=path/to/model/dir --listen-address=0.0.0.0:50051
 
 Build and test with the example client:
 
-    bazel run //:tiro_speech_client -- path/to/example.mp3 
+    bazel run -c opt //:tiro_speech_client -- $PWD/examples/is_is-mbl_01-2011-12-02T14:22:29.744483.wav
 
 Build and run the REST gateway:
 
-    bazel run //rest-gateway/cmd:rest_gateway_server -- --endpoint=localhost:50051
+    bazel run -c opt //rest-gateway/cmd:rest_gateway_server -- --endpoint=localhost:50051
 
 The REST gateway server should now be running on port 8080.
 

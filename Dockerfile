@@ -8,7 +8,7 @@ RUN curl --fail -L --output /usr/bin/bazel https://github.com/bazelbuild/bazel/r
         && chmod a+x /usr/bin/bazel
 WORKDIR /src
 COPY . .
-RUN bazel build //:tiro_speech_server -c opt
+RUN bazel build //:tiro_speech_server -c opt --@kaldi//:mathlib=openblas
 
 FROM debian:buster-slim
 COPY --from=build /src/bazel-bin/tiro_speech_server /bin/tiro_speech_server

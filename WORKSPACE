@@ -8,6 +8,12 @@ load(
 
 tiro_speech_core_repositories()
 
+new_local_repository(
+    name = "intel_mkl",
+    build_file = "//third_party:intel_mkl.BUILD",
+    path = "/opt/intel/mkl",
+)
+
 # This obviously only works on Linux x86_64
 new_local_repository(
     name = "gfortran_math_runtime",

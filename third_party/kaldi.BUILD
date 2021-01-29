@@ -8,6 +8,7 @@ package(
 )
 
 load("@rules_foreign_cc//tools/build_defs:make.bzl", "make")
+load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
 
 filegroup(
     name = "all",
@@ -19,6 +20,25 @@ config_setting(
     values = {
         "compilation_mode": "opt",
     },
+)
+
+string_flag(
+    name = "mathlib",
+    build_setting_default = "mkl",
+    values = [
+        "mkl",
+        "openblas",
+    ],
+)
+
+config_setting(
+    name = "use_mkl",
+    flag_values = {":mathlib": "mkl"},
+)
+
+config_setting(
+    name = "use_openblas",
+    flag_values = {":mathlib": "openblas"},
 )
 
 kaldi_static_libraries = [
@@ -573,16 +593,33 @@ kaldi_libs = [
     "base",
 ]
 
-kaldi_configure_opts = [
+base_configure_opts = [
     "--static",
     "--static-fst",
     "--fst-root=$$EXT_BUILD_DEPS$$/openfst",
     "--fst-version=1.6.7",  # TODO: obtain from WORKSPACE
     "--static-math",
-    "--mathlib=OPENBLAS",
-    "--openblas-root=$$EXT_BUILD_DEPS$$/openblas",
     "--use-cuda=no",
 ]
+
+mkl_configure_opts = base_configure_opts + [
+    "--mathlib=MKL",
+    "--mkl-libdir=$$EXT_BUILD_DEPS$$/lib",
+    "--mkl-root=$$EXT_BUILD_DEPS$$",
+]
+
+mkl_configure_cmd = "./configure {}".format(
+    " ".join([opt for opt in mkl_configure_opts]),
+)
+
+openblas_configure_opts = base_configure_opts + [
+    "--mathlib=OPENBLAS",
+    "--openblas-root=$$EXT_BUILD_DEPS$$/openblas",
+]
+
+openblas_configure_cmd = "./configure {}".format(
+    " ".join([opt for opt in openblas_configure_opts]),
+)
 
 make(
     name = "kaldi",
@@ -591,11 +628,15 @@ make(
         "HAVE_EXECINFO_H=0",
         "HAVE_CXXABI_H",
         "HAVE_OPENFST_GE_10600",
-    ],
-    lib_source = "@kaldi//:all",
-    make_commands = [
-        "./configure {}".format(" ".join([opt for opt in kaldi_configure_opts])),
     ] + select({
+        ":use_mkl": ["HAVE_MKL"],
+        ":use_openblas": ["HAVE_OPENBLAS"],
+    }),
+    lib_source = "@kaldi//:all",
+    make_commands = select({
+        ":use_mkl": [mkl_configure_cmd],
+        ":use_openblas": [openblas_configure_cmd],
+    }) + select({
         ":opt_build": ["echo 'CXXFLAGS += -O3 -g0 -DNDEBUG' >> kaldi.mk"],
         "//conditions:default": [],
     }) + [
@@ -615,8 +656,8 @@ make(
         "kaldi-" + lib + ".a"
         for lib in kaldi_libs
     ],
-    deps = [
-        "@openblas",
-        "@openfst",
-    ],
+    deps = select({
+        ":use_mkl": ["@intel_mkl//:mkl_x86_64"],
+        ":use_openblas": ["@openblas//:openblas"],
+    }) + ["@openfst"],
 )
