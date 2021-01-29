@@ -26,7 +26,7 @@ configure_make(
     },
     configure_options = [
         "--enable-static",
-        "--enable-shared",
+        # "--enable-shared",
         "--enable-openssl",
         "--enable-zlib",
         "--enable-bzlib",
@@ -36,10 +36,9 @@ configure_make(
         "--disable-symver",
     ],
     lib_source = ":all",
-    shared_libraries = [
-        "lib{}.so".format(lib)
-        for lib in FFMPEG_LIBS
-    ],
+    # TODO(rkjaran): Reenable shared libs when I figure out how to force ffmpeg
+    # to link to shared libssl when building shared libs
+    # shared_libraries = [ "lib{}.so".format(lib) for lib in FFMPEG_LIBS ],
     static_libraries = [
         "lib{}.a".format(lib)
         for lib in FFMPEG_LIBS
