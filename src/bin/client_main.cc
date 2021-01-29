@@ -57,10 +57,21 @@ int main(int argc, char* argv[]) {
   try {
     const std::string usage{
         "Example client \n"
-        "usage: tiro_speech_client wave-filename [recognition_config_pb "
+        "usage: tiro_speech_client [options] wave-filename "
+        "[recognition_config_pb "
         "[host:port]] \n"
-        " e.g. lr-speech-client --use-ssl --ssl-root-cert=keys/dev.cert "
-        "example.wav localhost:50051"};
+        " e.g. lr-speech-client --use-ssl example.wav example_config.pbtxt "
+        "localhost:50051"};
+
+    bool use_ssl = false;
+    for (int i = 1; i < argc; ++i) {
+      if (argv[i][0] != '-') break;
+      if (std::string{"--use-ssl"} == argv[i]) {
+        use_ssl = true;
+        argc--;
+        argv++;
+      }
+    }
 
     if (argc < 2 || argc > 4) {
       std::cerr << usage << '\n';
@@ -97,9 +108,17 @@ int main(int argc, char* argv[]) {
     config.PrintDebugString();
 
     RecognitionAudio audio;
-    audio.set_content(GetFileContents(wave_filename));
+    audio.set_uri(
+        "https://cadia-lvl.github.io/WebRICE/resources/example_voice_files/"
+        "talromur/b/older-clips/content-2.mp3");
+    // audio.set_content(GetFileContents(wave_filename));
 
-    auto creds = grpc::InsecureChannelCredentials();
+    std::shared_ptr<grpc::ChannelCredentials> creds;
+    if (use_ssl) {
+      creds = grpc::SslCredentials(grpc::SslCredentialsOptions{});
+    } else {
+      creds = grpc::InsecureChannelCredentials();
+    }
     auto stub = Speech::NewStub(grpc::CreateChannel(address, creds));
 
     RecognizeRequest req;

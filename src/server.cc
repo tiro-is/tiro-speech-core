@@ -128,7 +128,6 @@ void SpeechServer::Start() {
   auto creds = info_.CreateSpeechServerCredentials();
   grpc::ServerBuilder builder;
   builder.AddListeningPort(info_.Options().listen_address, creds)
-      .SetMaxReceiveMessageSize(268435500)
       .RegisterService(speech_service.get());
 
   services_.push_back(std::move(speech_service));
