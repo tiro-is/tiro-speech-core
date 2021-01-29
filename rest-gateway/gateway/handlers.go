@@ -43,7 +43,7 @@ import (
 
 )
 
-func openAPIServer(dir string) http.HandlerFunc {
+func openAPIServer() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		p := strings.TrimPrefix(r.URL.Path, "/openapiv2/")
 		if p != "v1alpha.swagger.json" {

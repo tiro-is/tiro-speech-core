@@ -50,10 +50,6 @@ type Options struct {
 	// GRPCServer defines an endpoint of a gRPC service
 	GRPCServer Endpoint
 
-	// OpenAPIDir is a path to a directory from which the server
-	// serves OpenAPI specs.
-	OpenAPIDir string
-
 	// Mux is a list of options to be passed to the gRPC-Gateway multiplexer
 	Mux []gwruntime.ServeMuxOption
 }
@@ -76,7 +72,7 @@ func Run(ctx context.Context, opts Options) error {
 	}()
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/openapiv2/", openAPIServer(opts.OpenAPIDir))
+	mux.HandleFunc("/openapiv2/", openAPIServer())
 	mux.HandleFunc("/healthz", healthzServer(conn))
 
 	gw, err := newGateway(ctx, conn, opts.Mux)

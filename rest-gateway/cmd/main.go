@@ -40,7 +40,6 @@ import (
 var (
 	endpoint   = flag.String("endpoint", "localhost:9090", "endpoint of the gRPC service")
 	network    = flag.String("network", "tcp", `one of "tcp" or "unix". Must be consistent to -endpoint`)
-	openAPIDir = flag.String("openapi_dir", "src/proto/tiro/speech/v1alpha", "path to the directory which contains OpenAPI definitions")
 )
 
 func main() {
@@ -54,7 +53,6 @@ func main() {
 			Network: *network,
 			Addr:    *endpoint,
 		},
-		OpenAPIDir: *openAPIDir,
 	}
 	if err := gateway.Run(ctx, opts); err != nil {
 		glog.Fatal(err)
