@@ -17,10 +17,16 @@ The following command builds the server along with all its dependencies and run
 it with a pre-downloaded model (using MKL):
 
     bazel run -c opt //:tiro_speech_server -- --kaldi-models=path/to/model/dir --listen-address=0.0.0.0:50051
-    
+
 To use OpenBLAS instead:
 
     bazel run -c opt --@kaldi//:mathlib=openblas //:tiro_speech_server -- --kaldi-models=path/to/model/dir --listen-address=0.0.0.0:50051
+
+To only build (note that `opt` stands for an optimized compilation mode):
+
+    bazel build -c opt //:tiro_speech_server
+
+The output binary should now be in `bazel-bin/tiro_speech_server`.
 
 Build and test with the example client:
 
@@ -31,6 +37,26 @@ Build and run the REST gateway:
     bazel run -c opt //rest-gateway/cmd:rest_gateway_server -- --endpoint=localhost:50051
 
 The REST gateway server should now be running on port 8080.
+
+## Preparing a model for use with the server
+
+Currently, Tiro Speech Core only supports the use of Kaldi chain models. To
+prepare a model for use with the server one needs to use the script
+[tools/models/prepare_chain_dist.sh](tools/models/prepare_chain_dist.sh) which
+has the usage:
+
+    Usage: tools/models/prepare_chain_dist.sh <output-dir>
+      --lang-dir <str|data/lang>
+      --ivector-extractor-dir <str|exp/nnet3/extractor>
+      --nnet-dir <str|exp/chain/tdnn_sp_bi>
+      --graph-dir <str|exp/chain/tdnn_sp_bi/graph>
+      --lang-code <str|>      # BCP-47 language code for model
+      --description <str|>  # short description of the model
+      --mfcc-config <str|conf/mfcc_hires.conf>
+      --fbank-config <str|> # Set either fbank-config or mfcc-config
+      --const-arpa <str|>    # ConstArpa model for rescoring, empty string == no rescoring
+      --model-name <str|>    # descriptive model name, used as a key
+
 
 ## Do I have to run this my self??
 
