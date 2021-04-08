@@ -45,6 +45,8 @@ struct AlignedWord {
         duration{duration.count()},
         word_symbol{word_symbol} {};
 
+  AlignedWord() : start_time{0}, duration{0}, word_symbol{""} {}
+
   friend std::ostream& operator<<(std::ostream& os, const AlignedWord& ali) {
     os << "WordAlignment{" << ali.word_symbol << ", " << ali.start_time << ", "
        << ali.duration << "}";
