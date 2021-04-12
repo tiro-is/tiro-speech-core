@@ -1,6 +1,5 @@
 load("@com_github_bazelbuild_buildtools//buildifier:def.bzl", "buildifier")
 load("@io_bazel_rules_docker//cc:image.bzl", "cc_image")
-load("@com_grail_bazel_compdb//:aspects.bzl", "compilation_database")
 
 licenses(["notice"])  # Apache 2.0
 
@@ -82,12 +81,4 @@ cc_image(
     base = "@ubuntu_focal_x86_64//image",
     binary = ":tiro_speech_client",
     visibility = ["//visibility:public"],
-)
-
-compilation_database(
-    name = "compdb",
-    targets = [
-        "//:tiro_speech_server",
-        "//:tiro_speech_client",
-    ],
 )

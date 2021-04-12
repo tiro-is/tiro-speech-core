@@ -1,6 +1,6 @@
 # TODO(rkjaran): increase test coverage
 cc_library(
-    name = "main",
+    name = "catch_main",
     deps = [
         "@catch2//:catch2_with_main",
     ],
@@ -16,7 +16,7 @@ cc_test(
         "only_speech_8000hz.wav",
     ],
     deps = [
-        ":main",
+        ":catch_main",
         "//:tiro_speech",
     ],
 )
@@ -31,7 +31,16 @@ cc_test(
         "example_44100Hz.mp3",
     ],
     deps = [
-        ":main",
+        ":catch_main",
+        "//:tiro_speech",
+    ],
+)
+
+cc_test(
+    name = "formatter",
+    srcs = ["test-formatter.cc"],
+    deps = [
+        ":catch_main",
         "//:tiro_speech",
     ],
 )
