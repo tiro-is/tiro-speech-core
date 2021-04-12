@@ -46,3 +46,16 @@ cc_test(
     ],
     size = "small",
 )
+
+cc_test(
+    name = "wordpiece",
+    srcs = ["test-wordpiece.cc"],
+    data = [
+        "wordpiece-vocab.txt",
+    ],
+    deps = [
+        ":catch_main",
+        "//:tiro_speech",
+    ],
+    size = "small",
+)
