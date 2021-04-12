@@ -56,14 +56,18 @@ class LookAheadFormatter {
   /**
    * Format a vector of aligned words
    *
-   * The word symbols in \p words must exist in \p isyms. The word symbols
-   * returned may or may not exist \p isyms but will be formatted according to
-   * the rules of the formatter. The time synchronization is preserved.
+   * The symbol table \p isyms MUST be compatible with the rewrite FST and all
+   * elements of \p words MUST exist in \p isyms. The word symbols returned may
+   * or may not exist \p isyms but will be formatted according to the rules of
+   * the formatter. The time synchronization is preserved.
    *
    */
   std::vector<AlignedWord> FormatWords(
       const fst::SymbolTable& isyms,
       const std::vector<AlignedWord>& words) const;
+
+  // TODO(rkjaran): std::vector<AlignedWord> FormatLattice(isyms,
+  // kaldi::Lattice/CompactLattice);
 
  private:
   LabelPairs relabel_pairs_;

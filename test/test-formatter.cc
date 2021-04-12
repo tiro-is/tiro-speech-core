@@ -91,7 +91,7 @@ TEST_CASE("Formatting using a Timing FST works", "[fst][itn]") {
   using namespace tiro_speech;
   using namespace tiro_speech::itn;
   using Arc = fst::StdArc;
-  const std::filesystem::path model_path{"test_model"};
+  const std::filesystem::path model_path{"test/test_model"};
 
   std::unique_ptr<fst::SymbolTable> isyms{fst::SymbolTable::ReadText(
       model_path / "graph" / "words.txt", fst::SymbolTableTextOptions{})};

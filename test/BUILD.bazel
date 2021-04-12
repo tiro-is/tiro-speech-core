@@ -39,8 +39,10 @@ cc_test(
 cc_test(
     name = "formatter",
     srcs = ["test-formatter.cc"],
+    data = glob(["test_model/**/*"]),
     deps = [
         ":catch_main",
         "//:tiro_speech",
     ],
+    size = "small",
 )

@@ -28,7 +28,7 @@ void Format(LookAheadFormatter::InFst ifst,
             const LookAheadFormatter::LabelPairs& relabel_pairs,
             const fst::StdILabelLookAheadFst& rewrite_fst,
             LookAheadFormatter::OutFst* ofst) {
-  // ifst is passed by value (and thus copied) because we have to relabel it
+  // ifst is passed by value (and thus copied) because we have to mutate it
   // any way.
   fst::Relabel(&ifst, {}, relabel_pairs);
   fst::ArcSort(&ifst, fst::OLabelCompare<LookAheadFormatter::Arc>{});
