@@ -195,6 +195,30 @@ def tiro_speech_core_repositories():
         ],
     )
 
+    # NOTE: This is a binary distribution that includes all of libtorch's
+    #       dependencies which might cause conflicts. The repo has Bazel build
+    #       rules that we might want to migrate to, especially if we want to
+    #       target architectures other than x86_64
+    libtorch_version = "1.8.1"
+    http_archive(
+        name = "pytorch",
+        sha256 = "ca4ab52992a52e2ca281656ceda732c07ea4dacdccb7fdec987032b12aae7c57",
+        urls = ["https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-static-with-deps-{}%2Bcpu.zip".format(libtorch_version)],
+        strip_prefix = "libtorch",
+        build_file = "//third_party:libtorch.BUILD",
+    )
+
+
+    http_archive(
+        name = "icu",
+        strip_prefix = "icu-release-64-2",
+        sha256 = "10cd92f1585c537d937ecbb587f6c3b36a5275c87feabe05d777a828677ec32f",
+        urls = [
+            "https://github.com/unicode-org/icu/archive/release-64-2.zip",
+        ],
+        build_file = "//third_party:icu.BUILD",
+    )
+
 def extra_repositories():
     # com_grail_bazel_compdb_version = "0.4.5"
     # http_archive(

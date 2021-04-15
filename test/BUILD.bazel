@@ -59,3 +59,43 @@ cc_test(
     ],
     size = "small",
 )
+
+
+# These two tests are just to test whether torch links properly
+cc_test(
+    name = "torch",
+    srcs = ["test-torch.cc"],
+    deps = [
+        "@pytorch//:torch_cpu",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "torchscript",
+    srcs = ["test-torchscript.cc"],
+    data = [
+        "@clarin_electra_punctuation_model_traced//file:traced_electra.pt",
+    ],
+    args = [
+        "clarin_electra_punctuation_model_traced/file/traced_electra.pt",
+    ],
+    deps = [
+        "@pytorch//:torch_cpu",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "punctuation",
+    srcs = ["test-punctuation.cc"],
+    data = [
+        "@clarin_electra_punctuation_model_traced//file:traced_electra.pt",
+        "@clarin_electra_punctuation_vocab//file:vocab.txt",
+    ],
+    deps = [
+        ":catch_main",
+        "//:tiro_speech",
+    ],
+    size = "small",
+)
