@@ -54,6 +54,12 @@ class WordPieceTokenizer {
   std::vector<Id> TokenizeToIds(const std::vector<WordToken>& words) const;
 
   /**
+   * Merge subwords into words
+   */
+  std::vector<WordToken> Merge(
+      const std::vector<WordPieceToken>& word_pieces) const;
+
+  /**
    * Convert between tokens and IDs and vice versa.
    *
    * @note These two do not handle OOVs in any way.

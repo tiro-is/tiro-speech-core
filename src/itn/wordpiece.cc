@@ -17,6 +17,7 @@
 
 #include <fstream>
 #include <string>
+#include <string_view>
 
 #include "src/base.h"
 
@@ -83,6 +84,22 @@ std::vector<WordPieceTokenizer::WordPieceToken> WordPieceTokenizer::Tokenize(
   return word_pieces;
 }
 
+std::vector<WordPieceTokenizer::WordToken> WordPieceTokenizer::Merge(
+    const std::vector<WordPieceTokenizer::WordPieceToken>& word_pieces) const {
+  std::vector<WordToken> words{};
+  for (const std::string_view piece : word_pieces) {
+    if (piece.size() > 2 && piece.substr(0, 2) == "##") {
+      if (words.size() == 0)
+        throw std::invalid_argument{
+            "First WordPiece element can't be a suffix"};
+      words.back().append(piece.substr(2));
+    } else {
+      words.emplace_back(piece);
+    }
+  }
+  return words;
+}
+
 std::vector<WordPieceTokenizer::Id> WordPieceTokenizer::TokenizeToIds(
     const std::vector<WordToken>& words) const {
   // TODO(rkjaran): This will probably be used more frequently than Tokenize so
@@ -93,7 +110,7 @@ std::vector<WordPieceTokenizer::Id> WordPieceTokenizer::TokenizeToIds(
 
 std::vector<WordPieceTokenizer::WordPieceToken> WordPieceTokenizer::IdsToTokens(
     const std::vector<Id>& ids) const {
-  std::vector<WordPieceToken> tokens(ids.size());
+  std::vector<WordPieceToken> tokens{};
   for (const auto& id : ids) {
     tokens.push_back(vocab_.at(id));
   }
@@ -102,9 +119,9 @@ std::vector<WordPieceTokenizer::WordPieceToken> WordPieceTokenizer::IdsToTokens(
 
 std::vector<WordPieceTokenizer::Id> WordPieceTokenizer::TokensToIds(
     const std::vector<WordPieceTokenizer::WordPieceToken>& tokens) const {
-  std::vector<Id> ids(tokens.size());
+  std::vector<Id> ids{};
   for (const auto& token : tokens) {
-    vocab_map_.at(token);
+    ids.push_back(vocab_map_.at(token));
   }
   return ids;
 }
