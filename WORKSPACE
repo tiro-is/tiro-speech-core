@@ -1,6 +1,6 @@
 workspace(name = "com_gitlab_tiro_is_tiro_speech_core")
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
 load(
     "@com_gitlab_tiro_is_tiro_speech_core//:repositories.bzl",
     "extra_repositories",
@@ -22,6 +22,25 @@ new_local_repository(
     name = "gfortran_math_runtime",
     build_file = "//third_party:gfortran_math_runtime.BUILD",
     path = "/usr/lib/x86_64-linux-gnu",
+)
+
+#############################
+# External assets for testing
+http_file(
+    name = "clarin_electra_punctuation_model_traced",
+    sha256 = "bb081069e5b26aa198c71e6b2d7aa74f64f68bffeca714fcab014820012050a0",
+    urls = ["https://storage.googleapis.com/tiro-is-public-assets/cadia-lvl/punctuation-prediction/14-09-2020/traced_electra.pt"],
+    downloaded_file_path = "traced_electra.pt",
+)
+
+http_file(
+    name = "clarin_electra_punctuation_vocab",
+    sha256 = "cb152ddbcb4da9a37a1c4e7e8f13d2ff08d48e520f53ac1b277454d1ee3773c8",
+    urls = [
+        "https://repository.clarin.is/repository/xmlui/bitstream/handle/20.500.12537/52/vocab.txt",
+        "https://storage.googleapis.com/tiro-is-public-assets/cadia-lvl/punctuation-prediction/14-09-2020/vocab.txt",
+    ],
+    downloaded_file_path = "vocab.txt",
 )
 
 ###################

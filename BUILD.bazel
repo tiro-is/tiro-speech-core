@@ -41,6 +41,8 @@ cc_library(
         "@fmt",
         "@kaldi",
         "@spdlog",
+        "@pytorch//:torch_cpu",
+        "@icu//:common",
     ],
 )
 
