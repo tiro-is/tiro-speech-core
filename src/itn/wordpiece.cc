@@ -84,11 +84,15 @@ std::vector<WordPieceTokenizer::WordPieceToken> WordPieceTokenizer::Tokenize(
   return word_pieces;
 }
 
+bool WordPieceTokenizer::IsSubword(const std::string_view token) const {
+  return token.size() > 2 && token.substr(0, 2) == "##";
+}
+
 std::vector<WordPieceTokenizer::WordToken> WordPieceTokenizer::Merge(
     const std::vector<WordPieceTokenizer::WordPieceToken>& word_pieces) const {
   std::vector<WordToken> words{};
   for (const std::string_view piece : word_pieces) {
-    if (piece.size() > 2 && piece.substr(0, 2) == "##") {
+    if (IsSubword(piece)) {
       if (words.size() == 0)
         throw std::invalid_argument{
             "First WordPiece element can't be a suffix"};
