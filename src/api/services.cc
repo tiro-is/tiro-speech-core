@@ -146,8 +146,10 @@ grpc::Status SpeechService::Recognize(grpc::ServerContext* context,
                                      ? 1
                                      : request->config().max_alternatives();
     utt_recognizer.Finalize();
-    if (!utt_recognizer.GetResults(max_alternatives, &first_alignments,
-                                   &transcripts)) {
+    if (!utt_recognizer.GetResults(
+            max_alternatives, &first_alignments, &transcripts,
+            /* end_of_utt */ true,
+            /* punctuate */ request->config().enable_automatic_punctuation())) {
       TIRO_SPEECH_WARN("Could not get transcripts.");
     }
 

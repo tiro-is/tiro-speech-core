@@ -25,6 +25,7 @@
 #include <lm/const-arpa-lm.h>
 #include <nnet3/nnet-utils.h>
 #include <online2/online-endpoint.h>
+#include <unicode/unistr.h>
 #include <util/kaldi-io.h>
 
 #include <algorithm>
@@ -57,6 +58,13 @@ void RescoreLattice(kaldi::CompactLattice* mutatable_clat,
   fst::ConvertLattice(composed_clat, &composed_lat);
   fst::Invert(&composed_lat);
   fst::DeterminizeLattice(composed_lat, mutatable_clat);
+}
+
+void Capitalize(std::string& str) {
+  auto upiece = icu::UnicodeString::fromUTF8(str);
+  upiece.replace(0, 1, upiece.tempSubString(0, 1).toUpper());
+  str.clear();
+  upiece.toUTF8String(str);
 }
 
 }  // namespace
@@ -170,7 +178,7 @@ std::string Recognizer::GetBestHypothesis(bool end_of_utt) const {
 bool Recognizer::GetResults(int32_t max_alternatives,
                             std::vector<AlignedWord>* best_aligned,
                             std::vector<std::string>* transcripts,
-                            bool end_of_utt) {
+                            bool end_of_utt, bool punctuate) {
   assert(transcripts != nullptr);
   assert(max_alternatives > 0);
   assert(!(max_alternatives > 1 && !end_of_utt));
@@ -197,14 +205,11 @@ bool Recognizer::GetResults(int32_t max_alternatives,
     return false;
   }
 
-  TIRO_SPEECH_DEBUG("Results lattice size = {}", lats.size());
   std::vector<std::string> first_word_symbols{};
-  transcripts->resize(lats.size());
-  for (size_t idx = 0; idx < transcripts->size(); ++idx) {
-    kaldi::LatticeWeight weight;
-    std::vector<int32> alignment;
+  for (size_t idx = 0; idx < lats.size(); ++idx) {
     std::vector<int32> words;
-    if (!fst::GetLinearSymbolSequence(lats[idx], &alignment, &words, &weight)) {
+    if (!fst::GetLinearSymbolSequence<kaldi::LatticeArc, int32>(
+            lats[idx], /* alignment */ nullptr, &words, /* weight */ nullptr)) {
       return false;
     }
     std::vector<std::string> word_symbols{};
@@ -212,8 +217,29 @@ bool Recognizer::GetResults(int32_t max_alternatives,
       if (word_id == 0) continue;
       word_symbols.push_back(model_.word_syms->Find(word_id));
     }
+
+    if (punctuate && model_.punctuator != nullptr) {
+      word_symbols =
+          model_.punctuator->Punctuate(word_symbols, /* capitalize */ true);
+
+      // TODO(rkjaran): Figure out when to append punctuation at the end, which
+      //                is something the model never (?) does.
+      if (end_of_utt && left_context_words_.size() == 0) {
+        Capitalize(word_symbols[0]);
+      }
+
+      if (idx == 0) {
+        // The first transcript and best_aligned should be the same string
+        for (std::size_t sym_idx = 0; sym_idx < best_aligned->size();
+             ++sym_idx) {
+          (*best_aligned)[sym_idx].word_symbol = word_symbols[sym_idx];
+        }
+      }
+    }
+
     if (idx == 0) first_word_symbols = word_symbols;
-    transcripts->at(idx) = Join(word_symbols, " ");
+
+    transcripts->push_back(Join(word_symbols, " "));
   }
   if (end_of_utt) left_context_words_ = first_word_symbols;
   return true;
