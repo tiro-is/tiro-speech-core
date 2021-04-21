@@ -23,7 +23,7 @@ spec:
         - -c
         - |
           mkdir -p /models/
-          IS_IS=kaldi.chain.is-IS.sim_2021-01-29
+          IS_IS=kaldi.chain.is-IS.sim_2021-04-21
           gsutil -m cp -r gs://models-talgreinir-is/is-IS/$IS_IS /models/
           mv /models/$IS_IS /models/is-IS
         volumeMounts:
