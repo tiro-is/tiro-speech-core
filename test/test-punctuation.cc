@@ -203,7 +203,7 @@ TEST_CASE("ElectraPunctuator can punctute", "[itn]") {
       "málum",
       "hjá",
       "okkur.",
-      "hann",
+      "Hann",
       "bætir",
       "við,",
       "ég",
@@ -223,9 +223,29 @@ TEST_CASE("ElectraPunctuator can punctute", "[itn]") {
   }
 
   SECTION("Punctate produces known capitalized output for known input") {
-    auto punctuated_words = punctuator.Punctuate(words, /* capitalize = */ true);
+    auto punctuated_words = punctuator.Punctuate(words, /* capitalize */ true);
     CHECK(punctuated_words.size() == words.size());
-    REQUIRE_THAT(punctuated_words,
-                 Catch::Matchers::Equals(expected_punctuated_words));
+    REQUIRE_THAT(
+        punctuated_words,
+        Catch::Matchers::Equals(expected_punctuated_and_capitalized_words));
+  }
+
+  SECTION("Punctuate produces only adds punctuate once per word") {
+    // We know that in our test case sólskin is split up
+    const std::vector<std::string> expected{
+        "þú", "ert",    "mitt", "sólskin,", "mitt",     "eina",  "sólskin.",
+        "þú", "gleður", "mig",  "þegar",    "heimilin", "gránar"};
+    const std::vector<std::string> expected_capitalized{
+        "þú", "ert",    "mitt", "sólskin,", "mitt",     "eina",  "sólskin.",
+        "Þú", "gleður", "mig",  "þegar",    "heimilin", "gránar"};
+    const std::vector<std::string> words{
+        "þú", "ert",    "mitt", "sólskin", "mitt",     "eina",  "sólskin",
+        "þú", "gleður", "mig",  "þegar",   "heimilin", "gránar"};
+    auto punctuated = punctuator.Punctuate(words);
+    REQUIRE_THAT(punctuated, Catch::Matchers::Equals(expected));
+    auto punctuated_capitalized =
+        punctuator.Punctuate(words, /* capitalized */ true);
+    REQUIRE_THAT(punctuated_capitalized,
+                 Catch::Matchers::Equals(expected_capitalized));
   }
 }

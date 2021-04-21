@@ -59,6 +59,8 @@ class WordPieceTokenizer {
   std::vector<WordToken> Merge(
       const std::vector<WordPieceToken>& word_pieces) const;
 
+  bool IsSubword(const std::string_view token) const;
+
   /**
    * Convert between tokens and IDs and vice versa.
    *

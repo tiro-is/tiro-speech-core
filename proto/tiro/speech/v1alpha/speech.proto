@@ -123,7 +123,10 @@ message RecognitionConfig {
   // Metadata regarding this request.
   RecognitionMetadata metadata = 9;
 
-  reserved 7, 12, 11;
+  // If 'true', adds punctuation to recognition result hypotheses.
+  bool enable_automatic_punctuation = 11;
+
+  reserved 7, 12;
 }
 
 // Description of audio data to be recognized.

@@ -25,6 +25,7 @@
 #include <string_view>
 #include <unordered_map>
 
+#include "src/itn/punctuation.h"
 #include "src/options.h"
 
 namespace tiro_speech {
@@ -48,6 +49,8 @@ struct KaldiModelConfig {
   /// These are needed for word alignment
   kaldi::WordBoundaryInfoNewOpts word_boundary_config;
   std::string word_boundary_rxfilename{"graph/phones/word_boundary.int"};
+
+  itn::ElectraPunctuatorConfig punctuator_config;
 
   void Register(OptionsItf* opts) {
     opts->Register("nnet3-rxfilename", &nnet3_rxfilename,
@@ -79,6 +82,9 @@ struct KaldiModelConfig {
     word_boundary_config.Register(&word_boundary_opts);
     opts->Register("word-boundary-int-rxfilename", &word_boundary_rxfilename,
                    "Word boundary file, necessary for word alignment.");
+
+    kaldi::ParseOptions punctuator_opts{"punctuator", opts};
+    punctuator_config.Register(&punctuator_opts);
   }
 
   void Check() const;
@@ -123,6 +129,8 @@ struct KaldiModel {
   AdaptationState initial_adaptation_state;
 
   const KaldiModelConfig config;
+
+  std::shared_ptr<itn::ElectraPunctuator> punctuator;
 };
 
 std::shared_ptr<KaldiModel> CreateKaldiModel(const std::string_view model_path);

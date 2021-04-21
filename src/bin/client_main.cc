@@ -108,10 +108,12 @@ int main(int argc, char* argv[]) {
     config.PrintDebugString();
 
     RecognitionAudio audio;
-    audio.set_uri(
-        "https://cadia-lvl.github.io/WebRICE/resources/example_voice_files/"
-        "talromur/b/older-clips/content-2.mp3");
-    // audio.set_content(GetFileContents(wave_filename));
+    if (wave_filename.substr(0, 7) == "http://" ||
+        wave_filename.substr(0, 8) == "https://") {
+      audio.set_uri(wave_filename);
+    } else {
+      audio.set_content(GetFileContents(wave_filename));
+    }
 
     std::shared_ptr<grpc::ChannelCredentials> creds;
     if (use_ssl) {

@@ -14,7 +14,6 @@
 
 #include "src/itn/punctuation.h"
 
-#include <unicode/uchar.h>
 #include <unicode/unistr.h>
 
 namespace tiro_speech::itn {
@@ -46,22 +45,39 @@ std::vector<std::string> ElectraPunctuator::Punctuate(
 
   auto output = module_.forward({input_ids_tensor}).toTuple();
 
+  // The predictions for each word piece are the same. So blindly appending the
+  // predicted punctuation character to each word results in this:
+  // "þú ert mitt sólsk, ##in, mitt eina sólsk. ##in. þú gleð ##ur mig þegar
+  // heimilin grá ##nar"
   torch::Tensor pred_ids_tensor =
       torch::argmax(output->elements()[0].toTensor(), 2, true).flatten();
 
-  bool capitalize_next = false;
+  std::vector<int> punctuation;
+
   for (std::size_t idx = 0; idx < word_pieces.size(); ++idx) {
     // First and last element are special tokens
     int char_id = pred_ids_tensor[idx + 1].item<int>();
-    word_pieces[idx] += kIdToChar.at(char_id);
-    if (capitalize_next) {
-      auto upiece = icu::UnicodeString::fromUTF8(word_pieces[idx]);
-      upiece.replace(0, 1, upiece.tempSubString(0, 1).toUpper());
+    if (!tokenizer_.IsSubword(word_pieces[idx])) {
+      punctuation.push_back(char_id);
     }
-    capitalize_next = kIdToCapitalizeNext.at(char_id);
   }
 
-  return tokenizer_.Merge(word_pieces);
+  std::vector<std::string> output_words = words;
+  bool capitalize_next = false;
+  for (std::size_t idx = 0; idx < output_words.size(); ++idx) {
+    if (capitalize) {
+      if (capitalize_next) {
+        auto upiece = icu::UnicodeString::fromUTF8(output_words[idx]);
+        upiece.replace(0, 1, upiece.tempSubString(0, 1).toUpper());
+        output_words[idx].clear();
+        upiece.toUTF8String(output_words[idx]);
+      }
+      capitalize_next = kIdToCapitalizeNext.at(punctuation[idx]);
+    }
+    output_words[idx] += kIdToChar.at(punctuation[idx]);
+  }
+
+  return output_words;
 }
 
 }  // namespace tiro_speech::itn

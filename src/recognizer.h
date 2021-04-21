@@ -122,8 +122,8 @@ class Recognizer final {
    */
   bool GetResults(int32_t max_alternatives,
                   std::vector<AlignedWord>* best_aligned,
-                  std::vector<std::string>* transcripts,
-                  bool end_of_utt = true);
+                  std::vector<std::string>* transcripts, bool end_of_utt = true,
+                  bool punctuate = false);
 
   std::vector<kaldi::Lattice> GetShortestPaths(
       int32_t n_max, bool end_of_utt = true,

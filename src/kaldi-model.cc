@@ -87,6 +87,12 @@ KaldiModel::KaldiModel(const KaldiModelConfig& config)
     kaldi::ReadKaldiObject(config.const_arpa_rxfilename, &const_arpa_lm);
     const_arpa_valid = true;
   }
+
+  if (!config.punctuator_config.pytorch_jit_model_filename.empty() &&
+      !config.punctuator_config.word_piece_opts.vocab_filename.empty()) {
+    punctuator =
+        std::make_shared<itn::ElectraPunctuator>(config.punctuator_config);
+  }
 }
 
 std::shared_ptr<KaldiModel> KaldiModel::Read(
@@ -104,7 +110,10 @@ std::shared_ptr<KaldiModel> KaldiModel::Read(
             model_path),
         std::make_error_code(std::errc::no_such_file_or_directory)};
   }
+
   po.ReadConfigFile("main.conf");  // Standard name for model config files.
+  po.PrintConfig(std::cerr);
+
   return std::make_shared<KaldiModel>(model_config);
 }
 
