@@ -60,6 +60,9 @@ def main() -> None:
         default=2,
         help="Return up to N best results",
     )
+    parser.add_argument(
+        "--automatic-punctuation", help="Automatically punctuate the transcript"
+    )
 
     args = parser.parse_args()
 
@@ -75,6 +78,7 @@ def main() -> None:
                     sample_rate_hertz=args.sample_rate_hertz,
                     max_alternatives=args.nbest,
                     enable_word_time_offsets=not args.no_timestamp_first,
+                    enable_automatic_punctuation=args.automatic_punctuation,
                 ),
                 audio=speech_pb2.RecognitionAudio(content=args.audio_file[0],),
             )
