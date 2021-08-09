@@ -48,6 +48,19 @@ MessageValidationStatus Validate(
     const tiro::speech::v1alpha::RecognizeRequest& request,
     const KaldiModelMap* models = nullptr);
 
+/** \brief Validate a StreamingRecognizeRequest message.
+ *
+ * The valid content of this type depends on whether it is the first message of
+ * a stream or not. To validate the first message in a stream set \a
+ * first_request = true
+ *
+ * \param[in] request       Message to validate
+ * \param[in] first_request Whether or not \a request
+ */
+MessageValidationStatus Validate(
+    const tiro::speech::v1alpha::StreamingRecognizeRequest& request,
+    bool first_request = false, const KaldiModelMap* models = nullptr);
+
 /** \brief Convert validation errors to gRPC errors
  *
  *  This will convert any validation error in \p errors to a
@@ -56,6 +69,15 @@ MessageValidationStatus Validate(
  *  \param errors List of fields with errors and the
  *  \return A gRPC OK status if errors is empty, otherwise this adds a
  *          BadRequest with FieldViolations
+ *
+ * Example usage in an RPC method:
+ * \code
+ * grpc::Status stat = ErrorVecToStatus(Validate(*request, &models_));
+ * if (!stat.ok()) {
+ *   return stat;
+ * }
+ * \endcode
+ *
  */
 grpc::Status ErrorVecToStatus(const MessageValidationStatus& errors);
 

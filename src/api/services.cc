@@ -197,6 +197,20 @@ grpc::Status SpeechService::Recognize(grpc::ServerContext* context,
   }
 }
 
+grpc::Status SpeechService::StreamingRecognize(
+    grpc::ServerContext* context,
+    grpc::ServerReaderWriter<StreamingRecognizeResponse,
+                             StreamingRecognizeRequest>* stream) {
+  try {
+    return grpc::Status{grpc::StatusCode::UNIMPLEMENTED,
+                        "StreamingRecognition has not been implemented."};
+  } catch (const std::exception& ex) {
+    TIRO_SPEECH_WARN("Unhandled exception: {}", ex.what());
+    return grpc::Status{grpc::StatusCode::INTERNAL,
+                        "Unknown error in StreamingRecognize."};
+  }
+}
+
 void SpeechService::RegisterModel(
     ModelId model_id, const std::shared_ptr<const KaldiModel>& model) {
   models_[std::move(model_id)] = model;
