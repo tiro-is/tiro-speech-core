@@ -114,8 +114,12 @@ void Recognizer::WriteAdaptationState(std::ostream& os, bool binary) {
   adaptation_state_.Write(os, binary);
 }
 
-void Recognizer::Decode(const VectorBase& waveform) {
+void Recognizer::Decode(const VectorBase& waveform, bool flush) {
   feature_pipeline_.AcceptWaveform(sample_rate_, waveform);
+
+  if (flush) {
+    feature_pipeline_.InputFinished();
+  }
 
   if (silence_weighting_->Active() &&
       feature_pipeline_.IvectorFeature() != nullptr) {
@@ -153,11 +157,7 @@ int32_t Recognizer::NumFramesDecoded() const {
   return decoder_.NumFramesDecoded();
 }
 
-void Recognizer::Finalize() {
-  feature_pipeline_.InputFinished();
-  decoder_.AdvanceDecoding();
-  // decoder_.FinalizeDecoding();
-}
+void Recognizer::Finalize() { decoder_.FinalizeDecoding(); }
 
 void Recognizer::EndSegment() {
   // decoder_.FinalizeDecoding();
@@ -189,9 +189,9 @@ bool Recognizer::GetResults(int32_t max_alternatives,
   std::vector<kaldi::Lattice> lats(1);
   if (max_alternatives > 1 || model_.const_arpa_valid) {
     lats = GetShortestPaths(max_alternatives,
-                            /* end_of_utt */ false);  // don't force final-probs
+                            end_of_utt);  // don't force final-probs
   } else {
-    decoder_.GetBestPath(/* end_of_utt */ false, &lats[0]);
+    decoder_.GetBestPath(end_of_utt, &lats[0]);
   }
 
   if (lats.empty()) {
@@ -294,7 +294,6 @@ bool GetWordAlignments(const KaldiModel& model, const kaldi::Lattice& lat,
       TIRO_SPEECH_WARN("WordAlignLattice failed, zero output states.");
       return false;
     }
-    TIRO_SPEECH_WARN("WordAlignLattice: Lattice might have been forced out!");
   }
 
   std::vector<int32_t> words, begin_times, lengths;  // these are #frames

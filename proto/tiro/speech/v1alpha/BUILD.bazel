@@ -53,6 +53,7 @@ go_proto_library(
     proto = ":speech_proto",
     deps = [
         "@go_googleapis//google/api:annotations_go_proto",
+        "@go_googleapis//google/rpc:status_go_proto",
     ],
 )
 

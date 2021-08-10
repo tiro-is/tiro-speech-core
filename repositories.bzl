@@ -56,11 +56,11 @@ def tiro_speech_core_repositories():
         build_file = "//third_party:spdlog.BUILD",
     )
 
-    rules_python_version = "0.1.0"
+    rules_python_version = "0.3.0"
     http_archive(
         name = "rules_python",
         url = "https://github.com/bazelbuild/rules_python/releases/download/{v}/rules_python-{v}.tar.gz".format(v = rules_python_version),
-        sha256 = "b6d46438523a3ec0f3cead544190ee13223a52f6a6765a29eae7b7cc24cc83a0",
+        sha256 = "934c9ceb552e84577b0faf1e5a2f0450314985b4d8712b2b70717dc679fdc01b",
     )
 
     # gRPC
@@ -217,6 +217,16 @@ def tiro_speech_core_repositories():
             "https://github.com/unicode-org/icu/archive/release-64-2.zip",
         ],
         build_file = "//third_party:icu.BUILD",
+    )
+
+    moodycamel_readerwriterqueue_version = "1.0.5"
+    moodycamel_readerwriterqueue_sha256 = "066cd2ba252ece4323a07e0f5d394fc45f793340d7d4112888986a1d5aea6901"
+    http_archive(
+        name = "moodycamel_readerwriterqueue",
+        strip_prefix = "readerwriterqueue-{}".format(moodycamel_readerwriterqueue_version),
+        urls = ["https://github.com/cameron314/readerwriterqueue/archive/v{}.zip".format(moodycamel_readerwriterqueue_version)],
+        sha256 = moodycamel_readerwriterqueue_sha256,
+        build_file = "//third_party:moodycamel_readerwriterqueue.BUILD",
     )
 
 def extra_repositories():

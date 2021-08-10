@@ -443,19 +443,8 @@ message StreamingRecognitionResult {
   // The default of 0.0 is a sentinel value indicating `stability` was not set.
   float stability = 3;
 
-  // Time offset of the end of this result relative to the
-  // beginning of the audio.
-  google.protobuf.Duration result_end_time = 4;
-
-  // For multi-channel audio, this is the channel number corresponding to the
-  // recognized result for the audio from that channel.
-  // For audio_channel_count = N, its output values can range from '1' to 'N'.
-  int32 channel_tag = 5;
-
-  // Output only. The [BCP-47](https://www.rfc-editor.org/rfc/bcp/bcp47.txt)
-  // language tag of the language in this result. This language code was
-  // detected to have the most likelihood of being spoken in the audio.
-  string language_code = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+  reserved "result_end_time", "channel_tag", "language_code";
+  reserved 4, 5, 6;
 }
 
 // A speech recognition result corresponding to a portion of the audio.

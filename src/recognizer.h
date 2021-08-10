@@ -16,6 +16,7 @@
 
 #include <matrix/kaldi-vector.h>
 #include <online2/online-ivector-feature.h>
+#include <online2/online-nnet3-decoding.h>
 
 #include <chrono>
 #include <iostream>
@@ -76,7 +77,7 @@ class Recognizer final {
   /**
    * Decode the given waveform. `GetBestHypothesis()` returns the result.
    */
-  void Decode(const VectorBase& waveform);
+  void Decode(const VectorBase& waveform, bool flush = false);
 
   bool HasEndpoint(bool single_utterance = false);
 
