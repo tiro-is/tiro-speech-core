@@ -1,4 +1,6 @@
-# TODO(rkjaran): increase test coverage
+# TODO(rkjaran): Increase test coverage, specifically for the recognizer.  To do
+#                that we need a publicly available model, or perhaps a small toy
+#                model in the repo.
 cc_library(
     name = "catch_main",
     deps = [

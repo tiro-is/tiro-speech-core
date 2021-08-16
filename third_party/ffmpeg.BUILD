@@ -1,6 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@rules_foreign_cc//tools/build_defs:configure.bzl", "configure_make")
+load("@rules_foreign_cc//foreign_cc:configure.bzl", "configure_make")
 
 filegroup(
     name = "all",
@@ -21,7 +21,7 @@ FFMPEG_LIBS = [
 
 configure_make(
     name = "ffmpeg",
-    configure_env_vars = {
+    env = {
         "LDFLAGS": "-lpthread",
     },
     configure_options = [
@@ -38,8 +38,8 @@ configure_make(
     lib_source = ":all",
     # TODO(rkjaran): Reenable shared libs when I figure out how to force ffmpeg
     # to link to shared libssl when building shared libs
-    # shared_libraries = [ "lib{}.so".format(lib) for lib in FFMPEG_LIBS ],
-    static_libraries = [
+    # out_shared_libs = [ "lib{}.so".format(lib) for lib in FFMPEG_LIBS ],
+    out_static_libs = [
         "lib{}.a".format(lib)
         for lib in FFMPEG_LIBS
     ],

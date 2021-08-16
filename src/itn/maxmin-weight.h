@@ -5,6 +5,8 @@
 #include <fst/util.h>
 #include <fst/weight.h>
 
+#include <string>
+
 namespace fst {
 template <class T>
 class MaxMinWeightTpl : public FloatWeightTpl<T> {
@@ -36,9 +38,9 @@ class MaxMinWeightTpl : public FloatWeightTpl<T> {
     return no_weight;
   }
 
-  static const string &Type() {
-    static const string *const type =
-        new string(string("maxmin") + FloatWeightTpl<T>::GetPrecisionString());
+  static const std::string &Type() {
+    static const std::string *const type = new std::string(
+        std::string("maxmin") + FloatWeightTpl<T>::GetPrecisionString());
     return *type;
   }
 
