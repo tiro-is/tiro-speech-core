@@ -25,7 +25,6 @@
 #include <lm/const-arpa-lm.h>
 #include <nnet3/nnet-utils.h>
 #include <online2/online-endpoint.h>
-#include <unicode/unistr.h>
 #include <util/kaldi-io.h>
 
 #include <algorithm>
@@ -38,6 +37,7 @@
 #include <utility>
 
 #include "src/base.h"
+#include "src/itn/formatter.h"
 #include "src/logging.h"
 
 namespace tiro_speech {
@@ -58,13 +58,6 @@ void RescoreLattice(kaldi::CompactLattice* mutatable_clat,
   fst::ConvertLattice(composed_clat, &composed_lat);
   fst::Invert(&composed_lat);
   fst::DeterminizeLattice(composed_lat, mutatable_clat);
-}
-
-void Capitalize(std::string& str) {
-  auto upiece = icu::UnicodeString::fromUTF8(str);
-  upiece.replace(0, 1, upiece.tempSubString(0, 1).toUpper());
-  str.clear();
-  upiece.toUTF8String(str);
 }
 
 }  // namespace
@@ -219,13 +212,17 @@ bool Recognizer::GetResults(int32_t max_alternatives,
     }
 
     if (punctuate && model_.punctuator != nullptr) {
-      word_symbols =
-          model_.punctuator->Punctuate(word_symbols, /* capitalize */ true);
+      std::vector<std::string> left_context_symbols;
+      for (const AlignedWord& ali : left_context_) {
+        left_context_symbols.push_back(ali.word_symbol);
+      }
+      word_symbols = model_.punctuator->PunctuateWithContext(
+          word_symbols, left_context_symbols, /* capitalize */ true);
 
       // TODO(rkjaran): Figure out when to append punctuation at the end, which
       //                is something the model never (?) does.
-      if (end_of_utt && left_context_words_.size() == 0) {
-        Capitalize(word_symbols[0]);
+      if (end_of_utt && left_context_.size() == 0) {
+        itn::Capitalize(word_symbols.at(0));
       }
 
       if (idx == 0) {
@@ -234,14 +231,14 @@ bool Recognizer::GetResults(int32_t max_alternatives,
              ++sym_idx) {
           (*best_aligned)[sym_idx].word_symbol = word_symbols[sym_idx];
         }
+        if (end_of_utt && !best_aligned->empty()) {
+          left_context_ = *best_aligned;
+        }
       }
     }
 
-    if (idx == 0) first_word_symbols = word_symbols;
-
     transcripts->push_back(Join(word_symbols, " "));
   }
-  if (end_of_utt) left_context_words_ = first_word_symbols;
   return true;
 }
 

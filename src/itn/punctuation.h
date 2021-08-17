@@ -57,6 +57,10 @@ class ElectraPunctuator {
   std::vector<std::string> Punctuate(const std::vector<std::string>& words,
                                      bool capitalize = false);
 
+  std::vector<std::string> PunctuateWithContext(
+      const std::vector<std::string>& words,
+      const std::vector<std::string>& left_context, bool capitalize = false);
+
  private:
   torch::jit::Module module_;
   WordPieceTokenizer tokenizer_;

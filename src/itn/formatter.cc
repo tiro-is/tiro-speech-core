@@ -13,6 +13,8 @@
 // limitations under the License.
 #include "src/itn/formatter.h"
 
+#include <unicode/unistr.h>
+
 namespace tiro_speech::itn {
 
 namespace {
@@ -66,6 +68,13 @@ std::vector<AlignedWord> LookAheadFormatter::FormatWords(
   fst::Compose(timing_symbol_fst, formatted_time_fst, &timing_byte_fst);
 
   return Convert(timing_byte_fst);
+}
+
+void Capitalize(std::string& str) {
+  auto upiece = icu::UnicodeString::fromUTF8(str);
+  upiece.replace(0, 1, upiece.tempSubString(0, 1).toUpper());
+  str.clear();
+  upiece.toUTF8String(str);
 }
 
 }  // namespace tiro_speech::itn
