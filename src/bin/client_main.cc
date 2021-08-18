@@ -26,11 +26,10 @@
 #include <thread>
 using namespace std::chrono_literals;
 
+#include "google/cloud/speech/v1/cloud_speech.grpc.pb.h"
 #include "google/rpc/error_details.pb.h"
 #include "google/rpc/status.pb.h"
 #include "proto/tiro/speech/v1alpha/speech.grpc.pb.h"
-
-using namespace tiro::speech::v1alpha;
 
 std::string GetFileContents(const std::string& filename) {
   std::string contents;
@@ -91,6 +90,7 @@ struct ProgramOptions {
   bool streaming = false;
   bool print_help = false;
   bool punctuation = false;
+  bool use_google_cloud_api = false;
 
   ProgramOptions() = default;
   ProgramOptions(int argc, char* argv[]) { Parse(argc, argv); }
@@ -119,6 +119,12 @@ struct ProgramOptions {
       } else if (std::string{"--punctuation"} == argv[i]) {
         punctuation = true;
         argc_--;
+      } else if (std::string{"--use-google-cloud-api"} == argv[i]) {
+        use_google_cloud_api = true;
+        argc_--;
+      } else {
+        std::cerr << "Invalid option\n";
+        exit(EXIT_FAILURE);
       }
     }
   }
@@ -207,6 +213,135 @@ struct ProgramOptions {
 //   }
 // };
 
+template <typename RecognitionConfig, typename Speech,
+          typename RecognitionAudio, typename RecognizeRequest,
+          typename RecognizeResponse, typename StreamingRecognizeResponse,
+          typename StreamingRecognizeRequest>
+int templated_main(ProgramOptions& opts) {
+  const std::string wave_filename = opts.Argv(0);
+  const std::string recognition_config_filename =
+      opts.NumArgs() > 1 ? opts.Argv(1) : "";
+  const std::string address =
+      opts.NumArgs() > 2 ? opts.Argv(2) : "localhost:50051";
+
+  RecognitionConfig config;
+  config.set_encoding(RecognitionConfig::LINEAR16);
+  config.set_sample_rate_hertz(16000);
+  config.set_language_code("is-IS");
+  config.set_enable_automatic_punctuation(opts.punctuation);
+
+  if (!recognition_config_filename.empty()) {
+    const std::string content = GetFileContents(recognition_config_filename);
+    if (!config.ParseFromString(content)) {
+      if (!google::protobuf::TextFormat::ParseFromString(content, &config)) {
+        std::cerr << "Couldn't parse RecognitionConfig from "
+                  << recognition_config_filename << '\n';
+        return EXIT_FAILURE;
+      }
+    }
+  }
+
+  std::cerr << config.Utf8DebugString() << '\n';
+
+  std::shared_ptr<grpc::ChannelCredentials> creds;
+  if (opts.use_ssl) {
+    creds = grpc::SslCredentials(grpc::SslCredentialsOptions{});
+  } else {
+    creds = grpc::InsecureChannelCredentials();
+  }
+  auto stub = Speech::NewStub(grpc::CreateChannel(address, creds));
+
+  if (!opts.streaming) {
+    RecognizeRequest req;
+    req.mutable_config()->CopyFrom(config);
+
+    RecognitionAudio audio;
+    if (wave_filename.substr(0, 7) == "http://" ||
+        wave_filename.substr(0, 8) == "https://") {
+      audio.set_uri(wave_filename);
+    } else {
+      audio.set_content(GetFileContents(wave_filename));
+    }
+    req.mutable_audio()->CopyFrom(audio);
+
+    RecognizeResponse res;
+    grpc::ClientContext ctx;
+    grpc::Status stat = stub->Recognize(&ctx, req, &res);
+    if (!stat.ok()) {
+      PrintErrorWithDetails(stat);
+      return EXIT_FAILURE;
+    }
+    PrintBestTranscript(res);
+  } else {
+    // Streamer streamer{&*stub, config, GetFileContents(wave_filename)};
+    // grpc::Status stat = streamer.Wait();
+    // if (!stat.ok()) {
+    //   std::cerr << "Stream failed.\n";
+    //   PrintErrorWithDetails(stat);
+    //   return EXIT_FAILURE;
+    // }
+    grpc::ClientContext ctx;
+    ctx.set_wait_for_ready(true);
+    auto stream = stub->StreamingRecognize(&ctx);
+
+    std::thread reader{[&stream]() {
+      StreamingRecognizeResponse res;
+      stream->WaitForInitialMetadata();
+      while (stream->Read(&res)) {
+        std::cerr << res.Utf8DebugString();
+        if (res.results_size() > 0) {
+          if (res.results(0).is_final()) {
+            std::cout << '\r' << res.results(0).alternatives(0).transcript()
+                      << '\n';
+          } else {
+            std::string partial = "";
+            for (const auto& partial_result : res.results()) {
+              partial += partial_result.alternatives(0).transcript();
+            }
+            std::cout << "\r" << partial;
+          }
+        }
+      }
+      std::cerr << "done reading\n";
+    }};
+
+    const std::chrono::milliseconds delay{2};
+    const std::string audio_content = GetFileContents(wave_filename);
+    std::size_t content_byte_offset_ = 0;
+    const std::size_t content_chunk_size_ = 4096;
+
+    StreamingRecognizeRequest req;
+    req.mutable_streaming_config()->mutable_config()->CopyFrom(config);
+    req.mutable_streaming_config()->set_interim_results(true);
+
+    if (!stream->Write(req)) {
+      std::cerr << "Initial write failed\n";
+      return EXIT_FAILURE;
+    }
+
+    for (; content_byte_offset_ < audio_content.size();
+         content_byte_offset_ += content_chunk_size_ * 2) {
+      std::string chunk = audio_content.substr(
+          content_byte_offset_,
+          std::min(content_chunk_size_ * 2,
+                   audio_content.size() - content_byte_offset_));
+      req.set_audio_content(std::move(chunk));
+      if (!stream->Write(req)) {
+        std::cerr << "Write failed\n";
+        return EXIT_FAILURE;
+      }
+      std::this_thread::sleep_for(delay);
+    }
+    stream->WritesDone();
+    reader.join();
+    if (grpc::Status stat = stream->Finish(); !stat.ok()) {
+      PrintErrorWithDetails(stat);
+      return EXIT_FAILURE;
+    }
+  }
+  return EXIT_SUCCESS;
+}
+
 int main(int argc, char* argv[]) {
   try {
     const std::string usage{
@@ -224,133 +359,24 @@ int main(int argc, char* argv[]) {
       return EXIT_SUCCESS;
     }
 
-    if (opts.NumArgs() < 1 || opts.NumArgs() > 2) {
+    if (opts.NumArgs() < 1 || opts.NumArgs() > 3) {
       std::cerr << usage << '\n';
       return EXIT_FAILURE;
     }
 
-    const std::string wave_filename = opts.Argv(0);
-    const std::string recognition_config_filename =
-        opts.NumArgs() > 1 ? opts.Argv(1) : "";
-    const std::string address =
-        opts.NumArgs() > 2 ? opts.Argv(2) : "localhost:50051";
-
-    RecognitionConfig config;
-    config.set_encoding(RecognitionConfig::LINEAR16);
-    config.set_sample_rate_hertz(16000);
-    config.set_language_code("is-IS");
-    config.set_enable_automatic_punctuation(opts.punctuation);
-
-    if (!recognition_config_filename.empty()) {
-      const std::string content = GetFileContents(recognition_config_filename);
-      if (!config.ParseFromString(content)) {
-        if (!google::protobuf::TextFormat::ParseFromString(content, &config)) {
-          std::cerr << "Couldn't parse RecognitionConfig from "
-                    << recognition_config_filename << '\n';
-          return EXIT_FAILURE;
-        }
-      }
-    }
-
-    std::cerr << config.Utf8DebugString() << '\n';
-
-    std::shared_ptr<grpc::ChannelCredentials> creds;
-    if (opts.use_ssl) {
-      creds = grpc::SslCredentials(grpc::SslCredentialsOptions{});
+    if (opts.use_google_cloud_api) {
+      using namespace google::cloud::speech::v1;
+      return templated_main<RecognitionConfig, Speech, RecognitionAudio,
+                            RecognizeRequest, RecognizeResponse,
+                            StreamingRecognizeResponse,
+                            StreamingRecognizeRequest>(opts);
     } else {
-      creds = grpc::InsecureChannelCredentials();
+      using namespace tiro::speech::v1alpha;
+      return templated_main<RecognitionConfig, Speech, RecognitionAudio,
+                            RecognizeRequest, RecognizeResponse,
+                            StreamingRecognizeResponse,
+                            StreamingRecognizeRequest>(opts);
     }
-    auto stub = Speech::NewStub(grpc::CreateChannel(address, creds));
-
-    if (!opts.streaming) {
-      RecognizeRequest req;
-      req.mutable_config()->CopyFrom(config);
-
-      RecognitionAudio audio;
-      if (wave_filename.substr(0, 7) == "http://" ||
-          wave_filename.substr(0, 8) == "https://") {
-        audio.set_uri(wave_filename);
-      } else {
-        audio.set_content(GetFileContents(wave_filename));
-      }
-      req.mutable_audio()->CopyFrom(audio);
-
-      RecognizeResponse res;
-      grpc::ClientContext ctx;
-      grpc::Status stat = stub->Recognize(&ctx, req, &res);
-      if (!stat.ok()) {
-        PrintErrorWithDetails(stat);
-        return EXIT_FAILURE;
-      }
-      PrintBestTranscript(res);
-    } else {
-      // Streamer streamer{&*stub, config, GetFileContents(wave_filename)};
-      // grpc::Status stat = streamer.Wait();
-      // if (!stat.ok()) {
-      //   std::cerr << "Stream failed.\n";
-      //   PrintErrorWithDetails(stat);
-      //   return EXIT_FAILURE;
-      // }
-      grpc::ClientContext ctx;
-      ctx.set_wait_for_ready(true);
-      auto stream = stub->StreamingRecognize(&ctx);
-
-      std::thread reader{[&stream]() {
-        StreamingRecognizeResponse res;
-        stream->WaitForInitialMetadata();
-        while (stream->Read(&res)) {
-          std::cerr << res.Utf8DebugString();
-          if (res.results_size() > 0) {
-            if (res.results(0).is_final()) {
-              std::cout << '\r' << res.results(0).alternatives(0).transcript()
-                        << '\n';
-            } else {
-              std::string partial = "";
-              for (const auto& partial_result : res.results()) {
-                partial += partial_result.alternatives(0).transcript();
-              }
-              std::cout << "\r" << partial;
-            }
-          }
-        }
-        std::cerr << "done reading\n";
-      }};
-
-      const std::chrono::milliseconds delay{2};
-      const std::string audio_content = GetFileContents(wave_filename);
-      std::size_t content_byte_offset_ = 0;
-      const std::size_t content_chunk_size_ = 4096;
-
-      StreamingRecognizeRequest req;
-      req.mutable_streaming_config()->mutable_config()->CopyFrom(config);
-      req.mutable_streaming_config()->set_interim_results(true);
-
-      if (!stream->Write(req)) {
-        std::cerr << "Initial write failed\n";
-        return EXIT_FAILURE;
-      }
-
-      for (; content_byte_offset_ < audio_content.size();
-           content_byte_offset_ += content_chunk_size_ * 2) {
-        std::string chunk = audio_content.substr(
-            content_byte_offset_,
-            std::min(content_chunk_size_ * 2,
-                     audio_content.size() - content_byte_offset_));
-        req.set_audio_content(std::move(chunk));
-        if (!stream->Write(req)) {
-          std::cerr << "Write failed\n";
-          return EXIT_FAILURE;
-        }
-        std::this_thread::sleep_for(delay);
-      }
-      stream->WritesDone();
-      reader.join();
-      if (grpc::Status stat = stream->Finish(); !stat.ok()) {
-        PrintErrorWithDetails(stat);
-        return EXIT_FAILURE;
-      }
-    }
-    return EXIT_SUCCESS;
   } catch (const std::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;

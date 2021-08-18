@@ -24,6 +24,7 @@
 #include <thread>
 #include <utility>
 
+#include "google/cloud/speech/v1/cloud_speech.grpc.pb.h"
 #include "proto/tiro/speech/v1alpha/speech.grpc.pb.h"
 #include "src/audio/audio-source.h"
 #include "src/base.h"
@@ -56,6 +57,34 @@ class SpeechService final : public tiro::speech::v1alpha::Speech::Service {
 
  private:
   KaldiModelMap models_;
+};
+
+class GoogleCloudSpeechProxy final
+    : public google::cloud::speech::v1::Speech::Service {
+ public:
+  using RecognizeRequest = google::cloud::speech::v1::RecognizeRequest;
+  using RecognizeResponse = google::cloud::speech::v1::RecognizeResponse;
+  using StreamingRecognizeRequest =
+      google::cloud::speech::v1::StreamingRecognizeRequest;
+  using StreamingRecognizeResponse =
+      google::cloud::speech::v1::StreamingRecognizeResponse;
+
+  explicit GoogleCloudSpeechProxy(SpeechService* speech_service)
+      : speech_service_{speech_service} {}
+
+  ~GoogleCloudSpeechProxy() = default;
+
+  grpc::Status Recognize(grpc::ServerContext* context,
+                         const RecognizeRequest* request,
+                         RecognizeResponse* response) override;
+
+  grpc::Status StreamingRecognize(
+      grpc::ServerContext* context,
+      grpc::ServerReaderWriter<StreamingRecognizeResponse,
+                               StreamingRecognizeRequest>* stream) override;
+
+ private:
+  SpeechService* speech_service_;
 };
 
 }  // end namespace tiro_speech

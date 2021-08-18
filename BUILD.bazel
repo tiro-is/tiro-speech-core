@@ -31,6 +31,7 @@ cc_library(
     visibility = ["//test:__pkg__"],
     deps = [
         "//proto/tiro/speech/v1alpha:speech_cc_grpc",
+        "@com_google_googleapis//google/cloud/speech/v1:speech_cc_grpc",
         "//third_party/webrtc:webrtcvad",
         "@com_github_grpc_grpc//:grpc++",
         "@com_github_grpc_grpc//:grpc++_reflection",
@@ -73,6 +74,7 @@ cc_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//proto/tiro/speech/v1alpha:speech_cc_grpc",
+        "@com_google_googleapis//google/cloud/speech/v1:speech_cc_grpc",
         "@com_github_grpc_grpc//:grpc++",
         "@com_google_googleapis//google/rpc:error_details_cc_proto",
         "@com_google_googleapis//google/rpc:status_cc_proto",

@@ -124,13 +124,16 @@ void SpeechServer::Start() {
   for (const auto& model_pair : models_) {
     speech_service->RegisterModel(model_pair.first, model_pair.second);
   }
+  services_.push_back(std::make_unique<tiro_speech::GoogleCloudSpeechProxy>(
+      speech_service.get()));
+  services_.push_back(std::move(speech_service));
 
   auto creds = info_.CreateSpeechServerCredentials();
   grpc::ServerBuilder builder;
-  builder.AddListeningPort(info_.Options().listen_address, creds)
-      .RegisterService(speech_service.get());
-
-  services_.push_back(std::move(speech_service));
+  builder.AddListeningPort(info_.Options().listen_address, creds);
+  for (const auto& service : services_) {
+    builder.RegisterService(service.get());
+  }
 
   rpc_server_ = builder.BuildAndStart();
 }
