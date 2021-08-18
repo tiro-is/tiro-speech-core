@@ -104,36 +104,26 @@ grpc::Status SpeechService::Recognize(grpc::ServerContext* context,
     Recognizer utt_recognizer{*model};
 
     std::unique_ptr<AudioSourceItf> audio_src{nullptr};
-    try {
-      switch (request->audio().audio_source_case()) {
-        case RecognitionAudio::kContent: {
-          audio_src = std::make_unique<ContentAudioSource>(
-              AudioSourceInfo{AudioSourceInfo::Type::kContent,
-                              Convert(request->config().encoding()),
-                              request->config().sample_rate_hertz()},
-              request->audio().content(),
-              request->config().sample_rate_hertz());
-          break;
-        }
-        case RecognitionAudio::kUri: {
-          audio_src = CreateAudioSourceFromUri(
-              AudioSourceInfo{AudioSourceInfo::Type::kUri,
-                              Convert(request->config().encoding()),
-                              request->config().sample_rate_hertz()},
-              request->audio().uri());
-          break;
-        }
-        default:
-          TIRO_SPEECH_ERROR("This shouldn't happen");
-          throw std::logic_error{""};
+    switch (request->audio().audio_source_case()) {
+      case RecognitionAudio::kContent: {
+        audio_src = std::make_unique<ContentAudioSource>(
+            AudioSourceInfo{AudioSourceInfo::Type::kContent,
+                            Convert(request->config().encoding()),
+                            request->config().sample_rate_hertz()},
+            request->audio().content(), request->config().sample_rate_hertz());
+        break;
       }
-    } catch (const AudioSourceError& err) {
-      audio_src = nullptr;
-    }
-
-    if (audio_src == nullptr) {
-      return grpc::Status{grpc::StatusCode::INVALID_ARGUMENT,
-                          "Audio decoding error. Possibly in wrong format?"};
+      case RecognitionAudio::kUri: {
+        audio_src = CreateAudioSourceFromUri(
+            AudioSourceInfo{AudioSourceInfo::Type::kUri,
+                            Convert(request->config().encoding()),
+                            request->config().sample_rate_hertz()},
+            request->audio().uri());
+        break;
+      }
+      default:
+        TIRO_SPEECH_ERROR("This shouldn't happen");
+        throw std::logic_error{""};
     }
 
     audio_src->Open();
@@ -191,10 +181,8 @@ grpc::Status SpeechService::Recognize(grpc::ServerContext* context,
     return grpc::Status::OK;
   } catch (const AudioSourceError& ex) {
     TIRO_SPEECH_DEBUG("Caught AudioSourceError");
-    return grpc::Status{
-        grpc::StatusCode::FAILED_PRECONDITION,
-        "Audio stream not decodable. Possibly unavailable or in unsupported "
-        "format."};
+    return grpc::Status{grpc::StatusCode::INVALID_ARGUMENT,
+                        "Audio decoding error. Possibly in wrong format?"};
   } catch (const std::exception& ex) {
     TIRO_SPEECH_WARN("Unhandled exception: {}", ex.what());
     return grpc::Status{grpc::StatusCode::INTERNAL,
@@ -204,48 +192,6 @@ grpc::Status SpeechService::Recognize(grpc::ServerContext* context,
 
 namespace {
 /// Processors for StreamingRecognize
-
-const char kEndOfStream[] = "";
-
-grpc::Status RunStreamingReader(
-    grpc::ServerReaderWriter<tiro::speech::v1alpha::StreamingRecognizeResponse,
-                             tiro::speech::v1alpha::StreamingRecognizeRequest>*
-        stream,
-    moodycamel::BlockingReaderWriterQueue<std::string>& chunks_buf,
-    std::atomic<bool>& processor_cancelled) {
-  auto retry_enqueue = [&chunks_buf, &processor_cancelled](
-                           auto&& chunk, int max_attempts = 50) {
-    for (int attempts = 1; !chunks_buf.try_enqueue(chunk) &&
-                           attempts <= max_attempts && !processor_cancelled;
-         attempts++) {
-      std::this_thread::sleep_for(200ms * attempts);
-      TIRO_SPEECH_DEBUG(
-          "RunStreamingReader: retrying chunk enqueue operation, attempt {}.",
-          attempts);
-    }
-  };
-
-  tiro::speech::v1alpha::StreamingRecognizeRequest req;
-  while (stream->Read(&req)) {
-    grpc::Status stat = ErrorVecToStatus(Validate(req));
-    if (!stat.ok()) {
-      return stat;
-    }
-    if (req.audio_content().empty() || req.audio_content() == "END") {
-      // Needed for websocket proxy, empty audio_content instead of
-      // WritesDone
-      break;
-    }
-    // If we can't enqueue because the queue is out of memory we will retry
-    retry_enqueue(std::move(*req.mutable_audio_content()));
-    if (processor_cancelled) {
-      return grpc::Status::CANCELLED;
-    }
-  }
-
-  chunks_buf.enqueue(kEndOfStream);
-  return grpc::Status::OK;
-}
 
 class ChunkConverter {
  public:
@@ -287,10 +233,10 @@ grpc::Status RunStreamingProcessor(
     grpc::ServerReaderWriter<tiro::speech::v1alpha::StreamingRecognizeResponse,
                              tiro::speech::v1alpha::StreamingRecognizeRequest>*
         stream,
-    moodycamel::BlockingReaderWriterQueue<std::string>& chunks_buf,
     const tiro::speech::v1alpha::StreamingRecognitionConfig& streaming_config,
     const KaldiModel& recognizer_model) {
   using tiro::speech::v1alpha::StreamingRecognitionResult;
+  using tiro::speech::v1alpha::StreamingRecognizeRequest;
   using tiro::speech::v1alpha::StreamingRecognizeResponse;
 
   kaldi::OnlineIvectorExtractorAdaptationState adaptation_state{
@@ -363,10 +309,12 @@ grpc::Status RunStreamingProcessor(
     milliseconds vad_offset{0};
     bool speech_started = false;
 
+    StreamingRecognizeRequest req;
     while (!endpoint_detected) {
-      std::string chunk;
-      chunks_buf.wait_dequeue(chunk);
-      more_data = (chunk != kEndOfStream);
+      more_data = stream->Read(&req) && !(req.audio_content().empty() ||
+                                          req.audio_content() == "END");
+      std::string chunk = *req.mutable_audio_content();
+
       if (!more_data) {
         TIRO_SPEECH_DEBUG("No more data in queue.");
         break;
@@ -485,8 +433,6 @@ grpc::Status SpeechService::StreamingRecognize(
                              StreamingRecognizeRequest>* stream) {
   using tiro::speech::v1alpha::StreamingRecognitionConfig;
   try {
-    moodycamel::BlockingReaderWriterQueue<std::string> chunks_buf;
-
     // Read config from first request (or return error)
     StreamingRecognizeRequest req;
     if (!stream->Read(&req)) {
@@ -495,9 +441,9 @@ grpc::Status SpeechService::StreamingRecognize(
     TIRO_SPEECH_DEBUG("Got StreamingRecognizeRequest: {}",
                       req.ShortDebugString());
 
-    grpc::Status stat =
-        ErrorVecToStatus(Validate(req, /* first_request */ true, &models_));
-    if (!stat.ok()) {
+    if (auto stat =
+            ErrorVecToStatus(Validate(req, /* first_request */ true, &models_));
+        !stat.ok()) {
       TIRO_SPEECH_DEBUG(
           "Error while validating first StreamingRecognizeRequest: details "
           "\"{}\"\"",
@@ -506,67 +452,12 @@ grpc::Status SpeechService::StreamingRecognize(
     }
 
     // Keep a local copy of streaming_config
-    StreamingRecognitionConfig streaming_config;
-    streaming_config.CopyFrom(req.streaming_config());
+    StreamingRecognitionConfig streaming_config{
+        *req.mutable_streaming_config()};
 
-    // We have to signal to the reader thread that the processing has been
-    // cancelled
-    std::atomic<bool> processor_cancelled{false};
-
-    auto reader_task = std::packaged_task<grpc::Status()>{
-        [stream, &chunks_buf, &processor_cancelled]() {
-          return RunStreamingReader(stream, chunks_buf, processor_cancelled);
-        }};
-    std::future<grpc::Status> reader_status_fut = reader_task.get_future();
-    std::thread reader_thread{std::move(reader_task)};
-
-    auto processor_task = std::packaged_task<grpc::Status()>{
-        [this, stream, &chunks_buf, &streaming_config]() {
-          return RunStreamingProcessor(
-              stream, chunks_buf, streaming_config,
-              *models_.at(
-                  {streaming_config.config().language_code(), "generic"}));
-        }};
-
-    std::future<grpc::Status> processor_status_fut =
-        processor_task.get_future();
-    std::thread processor_thread{std::move(processor_task)};
-
-    grpc::Status ret_status = grpc::Status::OK;
-
-    while (true) {
-      if (!(reader_status_fut.valid() || processor_status_fut.valid())) {
-        break;
-      }
-
-      if (reader_status_fut.valid()) {
-        auto reader_ready = reader_status_fut.wait_for(100ms);
-        if (reader_ready == std::future_status::ready) {
-          grpc::Status _ret_status = reader_status_fut.get();
-          if (!_ret_status.ok()) {
-            ret_status = _ret_status;
-            break;
-          }
-        }
-      }
-
-      if (processor_status_fut.valid()) {
-        auto processor_ready = processor_status_fut.wait_for(100ms);
-        if (processor_ready == std::future_status::ready) {
-          grpc::Status _ret_status = processor_status_fut.get();
-          if (!_ret_status.ok()) {
-            ret_status = _ret_status;
-            processor_cancelled = true;
-            break;
-          }
-        }
-      }
-    }
-
-    reader_thread.join();
-    processor_thread.join();
-
-    return ret_status;
+    return RunStreamingProcessor(
+        stream, streaming_config,
+        *models_.at({streaming_config.config().language_code(), "generic"}));
 
   } catch (const std::exception& ex) {
     TIRO_SPEECH_WARN("Unhandled exception: {}", ex.what());
