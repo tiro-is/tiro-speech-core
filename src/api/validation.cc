@@ -13,6 +13,9 @@
 // limitations under the License.
 #include "src/api/validation.h"
 
+#include <string>
+using namespace std::string_literals;
+
 #include <fmt/format.h>
 
 #include "google/rpc/code.pb.h"
@@ -116,6 +119,74 @@ MessageValidationStatus Validate(
   }
 
   // Validate required fields
+  return errors;
+}
+
+MessageValidationStatus Validate(
+    const tiro::speech::v1alpha::StreamingRecognizeRequest& request,
+    bool first_request, const KaldiModelMap* models) {
+  using tiro::speech::v1alpha::RecognitionConfig;
+  using tiro::speech::v1alpha::StreamingRecognizeRequest;
+
+  MessageValidationStatus errors;
+
+  // Field oneof 'streaming_request':
+  switch (request.streaming_request_case()) {
+    case StreamingRecognizeRequest::STREAMING_REQUEST_NOT_SET:
+      errors.emplace_back("oneof_streaming_request",
+                          "Either 'streaming_config' or 'audio_content' needs "
+                          "to be set.");
+      break;
+    case StreamingRecognizeRequest::kStreamingConfig:
+      if (!first_request) {
+        errors.emplace_back("streaming_config",
+                            "Only the first message can contain the field"
+                            " 'streaming_config'");
+      } else {
+        // Validate field 'streaming_config':
+
+        // Field 'streaming_config.config'
+        if (request.streaming_config().has_config()) {
+          auto config_errors =
+              Validate(request.streaming_config().config(), models);
+          if (request.streaming_config().config().encoding() !=
+              RecognitionConfig::LINEAR16) {
+            errors.emplace_back("streaming_config.config.encoding",
+                                "LINEAR16 currently only supported encoding for"
+                                " StreamingRecognize");
+          }
+          if (!config_errors.empty()) {
+            errors.emplace_back(
+                "streaming_config.config",
+                "Error validating field "
+                "'streaming_config.config'. See error details.");
+            for (const auto& err_pair : config_errors) {
+              errors.emplace_back("streaming_config.config."s + err_pair.first,
+                                  err_pair.second);
+            }
+          }
+        } else {
+          errors.emplace_back("streaming_config.config",
+                              "Required field 'streaming_config.config' "
+                              "missing");
+        }
+
+        // Field 'streaming_config.single_utterance': No checks needed.
+        // Field 'streaming_config.interim_results': No checks needed.
+      }
+      break;
+    case StreamingRecognizeRequest::kAudioContent:
+      if (first_request) {
+        errors.emplace_back("audio_content",
+                            "First message can only contain the field "
+                            "'streaming_config'");
+      } else {
+        // TODO(rkjaran): Validate audio_content according to
+        //                streaming_config.config
+      }
+      break;
+  }
+
   return errors;
 }
 

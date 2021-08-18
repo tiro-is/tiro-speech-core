@@ -2,33 +2,46 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 def tiro_speech_core_repositories():
+    rules_cc_version = "daf6ace7cfeacd6a83e9ff2ed659f416537b6c74"
+    rules_cc_sha256 = "b295cad8c5899e371dde175079c0a2cdc0151f5127acc92366a8c986beb95c76"
+    http_archive(
+        name = "rules_cc",
+        urls = ["https://github.com/bazelbuild/rules_cc/archive/{}.zip".format(rules_cc_version)],
+        strip_prefix = "rules_cc-{}".format(rules_cc_version),
+        sha256 = rules_cc_sha256,
+    )
+
     # commit d54c78ab86b40770ee19f0949db9d74a831ab9f0
-    rules_foreign_cc_version = "d54c78ab86b40770ee19f0949db9d74a831ab9f0"
+    rules_foreign_cc_version = "0.5.1"
+    rules_foreign_cc_sha256 = "d095de783abc687d25fbaab87705be8d00fa8643f4ffd03494698c56e97437bf"
     http_archive(
         name = "rules_foreign_cc",
         strip_prefix = "rules_foreign_cc-" + rules_foreign_cc_version,
         url = "https://github.com/bazelbuild/rules_foreign_cc/archive/{}.zip".format(rules_foreign_cc_version),
-        sha256 = "3c6445404e9e5d17fa0ecdef61be00dd93b20222c11f45e146a98c0a3f67defa",
+        sha256 = rules_foreign_cc_sha256,
     )
 
-    kaldi_version = "c7027423e4e73782e74dd3fb25acec8f3ff43670"
+    kaldi_version = "89e59b93e631ed704a65b6ba04fdc789773f44dc"
     new_git_repository(
         name = "kaldi",
-        remote = "https://github.com/kaldi-asr/kaldi.git",
+        remote = "https://github.com/tiro-is/kaldi.git",
         commit = kaldi_version,
-        shallow_since = "1578906033 +0800",
+        shallow_since = "1627474359 +0000",
         build_file = "//third_party:kaldi.BUILD",
         strip_prefix = "src",
+        patch_cmds = [
+            # Ignore extra arguments, so we can use configure_make from rules_foreign_cc
+            "sed -i 's/*)  echo \"Unknown argument: $1, exiting\"; usage; exit 1 ;;/*) shift ;;/' configure"
+        ],
     )
 
-    openfst_version = "1.6.7"
+    openfst_version = "1.8.1"
     http_archive(
         name = "openfst",
         urls = [
             "http://www.openfst.org/twiki/pub/FST/FstDownload/openfst-{}.tar.gz".format(openfst_version),
         ],
-        sha256 = "e21a486d827cde6a592c8e91721e4540ad01a5ae35a60423cf17be4d716017f7",
-        build_file = "//third_party:openfst.BUILD",
+        sha256 = "24fb53b72bb687e3fa8ee96c72a31ff2920d99b980a0a8f61dda426fca6713f0",
         strip_prefix = "openfst-" + openfst_version,
     )
 
@@ -56,11 +69,11 @@ def tiro_speech_core_repositories():
         build_file = "//third_party:spdlog.BUILD",
     )
 
-    rules_python_version = "0.1.0"
+    rules_python_version = "0.3.0"
     http_archive(
         name = "rules_python",
         url = "https://github.com/bazelbuild/rules_python/releases/download/{v}/rules_python-{v}.tar.gz".format(v = rules_python_version),
-        sha256 = "b6d46438523a3ec0f3cead544190ee13223a52f6a6765a29eae7b7cc24cc83a0",
+        sha256 = "934c9ceb552e84577b0faf1e5a2f0450314985b4d8712b2b70717dc679fdc01b",
     )
 
     # gRPC
@@ -217,6 +230,16 @@ def tiro_speech_core_repositories():
             "https://github.com/unicode-org/icu/archive/release-64-2.zip",
         ],
         build_file = "//third_party:icu.BUILD",
+    )
+
+    moodycamel_readerwriterqueue_version = "1.0.5"
+    moodycamel_readerwriterqueue_sha256 = "066cd2ba252ece4323a07e0f5d394fc45f793340d7d4112888986a1d5aea6901"
+    http_archive(
+        name = "moodycamel_readerwriterqueue",
+        strip_prefix = "readerwriterqueue-{}".format(moodycamel_readerwriterqueue_version),
+        urls = ["https://github.com/cameron314/readerwriterqueue/archive/v{}.zip".format(moodycamel_readerwriterqueue_version)],
+        sha256 = moodycamel_readerwriterqueue_sha256,
+        build_file = "//third_party:moodycamel_readerwriterqueue.BUILD",
     )
 
 def extra_repositories():

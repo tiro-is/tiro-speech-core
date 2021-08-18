@@ -1,9 +1,11 @@
 build --incompatible_restrict_string_escapes=false
 query --incompatible_restrict_string_escapes=false
-build --repository_cache=~/.cache/bazel-repo --disk_cache=~/.cache/bazel-disk
-test --repository_cache=~/.cache/bazel-repo --disk_cache=~/.cache/bazel-disk
-fetch --repository_cache=~/.cache/bazel-repo --disk_cache=~/.cache/bazel-disk
+
 build --cxxopt=-std=c++17 --cxxopt=-m64
-build --action_env=PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+build --incompatible_strict_action_env
+
+build --action_env=PATH=/usr/local/bin:/usr/bin:/bin
+build --test_env=PATH=/usr/local/bin:/usr/bin:/bin
 build --action_env=LD_LIBRARY_PATH=
+build --test_env=LD_LIBRARY_PATH=
 build --keep_going

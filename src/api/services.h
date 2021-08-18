@@ -37,10 +37,19 @@ class SpeechService final : public tiro::speech::v1alpha::Speech::Service {
  public:
   using RecognizeRequest = tiro::speech::v1alpha::RecognizeRequest;
   using RecognizeResponse = tiro::speech::v1alpha::RecognizeResponse;
+  using StreamingRecognizeRequest =
+      tiro::speech::v1alpha::StreamingRecognizeRequest;
+  using StreamingRecognizeResponse =
+      tiro::speech::v1alpha::StreamingRecognizeResponse;
 
   grpc::Status Recognize(grpc::ServerContext* context,
                          const RecognizeRequest* request,
                          RecognizeResponse* response) override;
+
+  grpc::Status StreamingRecognize(
+      grpc::ServerContext* context,
+      grpc::ServerReaderWriter<StreamingRecognizeResponse,
+                               StreamingRecognizeRequest>* stream) override;
 
   void RegisterModel(ModelId model_id,
                      const std::shared_ptr<const KaldiModel>& model);

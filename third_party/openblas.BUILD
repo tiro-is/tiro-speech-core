@@ -8,7 +8,7 @@ filegroup(
 )
 
 # OpenBLAS
-load("@rules_foreign_cc//tools/build_defs:make.bzl", "make")
+load("@rules_foreign_cc//foreign_cc:make.bzl", "make")
 
 OPENBLAS_TARGETS = [
     "NEHALEM",
@@ -19,7 +19,7 @@ OPENBLAS_TARGETS = [
 
 make(
     name = "openblas",
-    binaries = [
+    out_binaries = [
         "tests/zblat1",
         "tests/sblat1",
         "tests/cblat1",
@@ -29,17 +29,18 @@ make(
         "-lgfortran",
         "-lquadmath",
     ],
-    make_commands = [
-        "make PREFIX=$$INSTALLDIR$$ USE_LOCKING=1 USE_THREAD=0 " +
-        "DYNAMIC_ARCH=1 DYNAMIC_LIST='{}' all install".format(
-            " ".join([t for t in OPENBLAS_TARGETS]),
-        ),
+    args = [
+        "PREFIX=$$INSTALLDIR$$",
+        "USE_LOCKING=1",
+        "USE_THREAD=0",
+        "DYNAMIC_ARCH=1",
+        "DYNAMIC_LIST='{}'".format(" ".join([t for t in OPENBLAS_TARGETS])),
     ],
-    shared_libraries = [
+    out_shared_libs = [
         "libopenblas.so",
         "libopenblas-r0.3.7.so",
     ],
-    static_libraries = [
+    out_static_libs = [
         "libopenblas.a",
         "libopenblas-r0.3.7.a",
     ],

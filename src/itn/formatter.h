@@ -74,6 +74,8 @@ class LookAheadFormatter {
   std::unique_ptr<fst::StdILabelLookAheadFst> rewrite_fst_;
 };
 
+void Capitalize(std::string& str);
+
 }  // namespace tiro_speech::itn
 
 #endif  // TIRO_SPEECH_SRC_ITN_FORMATTER_H_

@@ -16,6 +16,8 @@
 
 #include <unicode/unistr.h>
 
+#include "src/itn/formatter.h"
+
 namespace tiro_speech::itn {
 
 namespace {
@@ -25,6 +27,21 @@ const std::array<std::string, 4> kIdToLabel{"O", "COMMA", "PERIOD",
                                             "QUESTIONMARK"};
 const std::array<std::string, 4> kIdToChar{"", ",", ".", "?"};
 const std::array<bool, 4> kIdToCapitalizeNext{false, false, true, true};
+
+bool ShouldCapitalizeNext(int id) { return kIdToCapitalizeNext.at(id); }
+
+bool ShouldCapitalizeNext(char character) {
+  switch (character) {
+    case '.':
+      [[fallthrough]];
+    case '?':
+      [[fallthrough]];
+    case '!':
+      return true;
+    default:
+      return false;
+  }
+}
 
 }  // namespace
 
@@ -67,17 +84,30 @@ std::vector<std::string> ElectraPunctuator::Punctuate(
   for (std::size_t idx = 0; idx < output_words.size(); ++idx) {
     if (capitalize) {
       if (capitalize_next) {
-        auto upiece = icu::UnicodeString::fromUTF8(output_words[idx]);
-        upiece.replace(0, 1, upiece.tempSubString(0, 1).toUpper());
-        output_words[idx].clear();
-        upiece.toUTF8String(output_words[idx]);
+        Capitalize(output_words[idx]);
       }
-      capitalize_next = kIdToCapitalizeNext.at(punctuation[idx]);
+      capitalize_next = ShouldCapitalizeNext(punctuation[idx]);
     }
     output_words[idx] += kIdToChar.at(punctuation[idx]);
   }
 
   return output_words;
+}
+
+std::vector<std::string> ElectraPunctuator::PunctuateWithContext(
+    const std::vector<std::string>& words,
+    const std::vector<std::string>& left_context, bool capitalize) {
+  // The use of the left context is very limited right now
+  std::vector<std::string> punctuated = Punctuate(words, capitalize);
+  if (!capitalize || left_context.empty()) {
+    return punctuated;
+  }
+
+  if (ShouldCapitalizeNext(left_context.back().back())) {
+    Capitalize(punctuated.at(0));
+  }
+
+  return punctuated;
 }
 
 }  // namespace tiro_speech::itn

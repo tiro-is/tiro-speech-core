@@ -83,7 +83,7 @@ TEST_CASE("A TimingFst can be created and printed", "[fst][itn]") {
 3
 )";
   std::stringstream ss{};
-  printer.Print(&ss, "");
+  printer.Print(ss, "");
   REQUIRE(ss.str() == text_fst);
 }
 

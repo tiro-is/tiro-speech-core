@@ -47,7 +47,7 @@ http_file(
 # rules_foreign_cc
 #
 # Needed for building non-trivial non-Bazel external dependencies
-load("@rules_foreign_cc//:workspace_definitions.bzl", "rules_foreign_cc_dependencies")
+load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_dependencies")
 
 rules_foreign_cc_dependencies()
 

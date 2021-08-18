@@ -43,6 +43,7 @@ cc_library(
         "@spdlog",
         "@pytorch//:torch_cpu",
         "@icu//:common",
+        "@moodycamel_readerwriterqueue",
     ],
 )
 

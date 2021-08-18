@@ -25,7 +25,6 @@
 #include <lm/const-arpa-lm.h>
 #include <nnet3/nnet-utils.h>
 #include <online2/online-endpoint.h>
-#include <unicode/unistr.h>
 #include <util/kaldi-io.h>
 
 #include <algorithm>
@@ -38,6 +37,7 @@
 #include <utility>
 
 #include "src/base.h"
+#include "src/itn/formatter.h"
 #include "src/logging.h"
 
 namespace tiro_speech {
@@ -58,13 +58,6 @@ void RescoreLattice(kaldi::CompactLattice* mutatable_clat,
   fst::ConvertLattice(composed_clat, &composed_lat);
   fst::Invert(&composed_lat);
   fst::DeterminizeLattice(composed_lat, mutatable_clat);
-}
-
-void Capitalize(std::string& str) {
-  auto upiece = icu::UnicodeString::fromUTF8(str);
-  upiece.replace(0, 1, upiece.tempSubString(0, 1).toUpper());
-  str.clear();
-  upiece.toUTF8String(str);
 }
 
 }  // namespace
@@ -114,8 +107,12 @@ void Recognizer::WriteAdaptationState(std::ostream& os, bool binary) {
   adaptation_state_.Write(os, binary);
 }
 
-void Recognizer::Decode(const VectorBase& waveform) {
+void Recognizer::Decode(const VectorBase& waveform, bool flush) {
   feature_pipeline_.AcceptWaveform(sample_rate_, waveform);
+
+  if (flush) {
+    feature_pipeline_.InputFinished();
+  }
 
   if (silence_weighting_->Active() &&
       feature_pipeline_.IvectorFeature() != nullptr) {
@@ -153,11 +150,7 @@ int32_t Recognizer::NumFramesDecoded() const {
   return decoder_.NumFramesDecoded();
 }
 
-void Recognizer::Finalize() {
-  feature_pipeline_.InputFinished();
-  decoder_.AdvanceDecoding();
-  // decoder_.FinalizeDecoding();
-}
+void Recognizer::Finalize() { decoder_.FinalizeDecoding(); }
 
 void Recognizer::EndSegment() {
   // decoder_.FinalizeDecoding();
@@ -189,9 +182,9 @@ bool Recognizer::GetResults(int32_t max_alternatives,
   std::vector<kaldi::Lattice> lats(1);
   if (max_alternatives > 1 || model_.const_arpa_valid) {
     lats = GetShortestPaths(max_alternatives,
-                            /* end_of_utt */ false);  // don't force final-probs
+                            end_of_utt);  // don't force final-probs
   } else {
-    decoder_.GetBestPath(/* end_of_utt */ false, &lats[0]);
+    decoder_.GetBestPath(end_of_utt, &lats[0]);
   }
 
   if (lats.empty()) {
@@ -219,13 +212,17 @@ bool Recognizer::GetResults(int32_t max_alternatives,
     }
 
     if (punctuate && model_.punctuator != nullptr) {
-      word_symbols =
-          model_.punctuator->Punctuate(word_symbols, /* capitalize */ true);
+      std::vector<std::string> left_context_symbols;
+      for (const AlignedWord& ali : left_context_) {
+        left_context_symbols.push_back(ali.word_symbol);
+      }
+      word_symbols = model_.punctuator->PunctuateWithContext(
+          word_symbols, left_context_symbols, /* capitalize */ true);
 
       // TODO(rkjaran): Figure out when to append punctuation at the end, which
       //                is something the model never (?) does.
-      if (end_of_utt && left_context_words_.size() == 0) {
-        Capitalize(word_symbols[0]);
+      if (end_of_utt && left_context_.size() == 0) {
+        itn::Capitalize(word_symbols.at(0));
       }
 
       if (idx == 0) {
@@ -234,14 +231,14 @@ bool Recognizer::GetResults(int32_t max_alternatives,
              ++sym_idx) {
           (*best_aligned)[sym_idx].word_symbol = word_symbols[sym_idx];
         }
+        if (end_of_utt && !best_aligned->empty()) {
+          left_context_ = *best_aligned;
+        }
       }
     }
 
-    if (idx == 0) first_word_symbols = word_symbols;
-
     transcripts->push_back(Join(word_symbols, " "));
   }
-  if (end_of_utt) left_context_words_ = first_word_symbols;
   return true;
 }
 
@@ -294,7 +291,6 @@ bool GetWordAlignments(const KaldiModel& model, const kaldi::Lattice& lat,
       TIRO_SPEECH_WARN("WordAlignLattice failed, zero output states.");
       return false;
     }
-    TIRO_SPEECH_WARN("WordAlignLattice: Lattice might have been forced out!");
   }
 
   std::vector<int32_t> words, begin_times, lengths;  // these are #frames
