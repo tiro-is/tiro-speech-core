@@ -166,8 +166,8 @@ load(
 
 # Base image for our cc_images
 container_pull(
-    name = "ubuntu_focal_x86_64",
-    digest = "sha256:3093096ee188f8ff4531949b8f6115af4747ec1c58858c091c8cb4579c39cc4e",
+    name = "ubuntu_groovy_x86_64",
+    digest = "sha256:754eb641a1ba98a8b483c3595a14164fa4ed7f4b457e1aa05f13ce06f8151723",
     registry = "index.docker.io",
     repository = "library/ubuntu",
 )

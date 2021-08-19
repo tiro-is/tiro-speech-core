@@ -471,4 +471,34 @@ void SpeechService::RegisterModel(
   models_[std::move(model_id)] = model;
 }
 
+grpc::Status GoogleCloudSpeechProxy::Recognize(grpc::ServerContext* context,
+                                               const RecognizeRequest* request,
+                                               RecognizeResponse* response) {
+  assert(speech_service_ != nullptr);
+  TIRO_SPEECH_INFO("Forwarding Google Cloud Speech API Recognize request");
+  // This is a bit more expensive than we want, but blindly casting it will
+  // simply cause a segfault
+  tiro::speech::v1alpha::RecognizeRequest converted_req;
+  converted_req.ParseFromString(request->SerializeAsString());
+
+  // Close your eyes, dangerous cast coming up! We can do this because the
+  // serialized messages are compatible.
+  return speech_service_->Recognize(
+      context, &converted_req,
+      reinterpret_cast<tiro::speech::v1alpha::RecognizeResponse*>(response));
+}
+
+grpc::Status GoogleCloudSpeechProxy::StreamingRecognize(
+    grpc::ServerContext* context,
+    grpc::ServerReaderWriter<StreamingRecognizeResponse,
+                             StreamingRecognizeRequest>* stream) {
+  TIRO_SPEECH_INFO(
+      "Forwarding Google Cloud Speech API StreamingRecognize request");
+  // Close your eyes, danger ahead!
+  return speech_service_->StreamingRecognize(
+      context, reinterpret_cast<grpc::ServerReaderWriter<
+                   tiro::speech::v1alpha::StreamingRecognizeResponse,
+                   tiro::speech::v1alpha::StreamingRecognizeRequest>*>(stream));
+}
+
 }  // end namespace tiro_speech
