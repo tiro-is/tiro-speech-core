@@ -60,7 +60,7 @@ cc_binary(
 
 cc_image(
     name = "tiro_speech_server_image",
-    base = "@ubuntu_focal_x86_64//image",
+    base = "@ubuntu_groovy_x86_64//image",
     binary = ":tiro_speech_server",
     visibility = ["//visibility:public"],
 )
