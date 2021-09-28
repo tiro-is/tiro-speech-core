@@ -242,6 +242,18 @@ def tiro_speech_core_repositories():
         build_file = "//third_party:moodycamel_readerwriterqueue.BUILD",
     )
 
+    org_opengrm_thrax_version = "1.3.6"
+    org_opengrm_thrax_sha256 = "5f00a2047674753cba6783b010ab273366dd3dffc160bdb356f7236059a793ba"
+    http_archive(
+        name = "org_opengrm_thrax",
+        urls = ["https://www.opengrm.org/twiki/pub/GRM/ThraxDownload/thrax-{}.tar.gz".format(org_opengrm_thrax_version)],
+        sha256 = org_opengrm_thrax_sha256,
+        strip_prefix = "thrax-{}".format(org_opengrm_thrax_version),
+        repo_mapping = {
+            "@org_openfst": "@openfst",
+        },
+    )
+
 def extra_repositories():
     # com_grail_bazel_compdb_version = "0.4.5"
     # http_archive(

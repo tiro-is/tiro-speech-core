@@ -1,0 +1,59 @@
+# Copyright 2017  Reykjavik University (Author: Inga Rún Helgadóttir)
+# Apache 2.0
+
+# Commands used in all grammars
+import 'src/itn/byte.grm' as b;
+
+export alphabet = Optimize[
+           "a" | "á" | "b" | "d" | "ð" |
+           "e" | "é" | "f" | "g" | "h" |
+           "i" | "í" | "j" | "k" | "l" |
+           "m" | "n" | "o" | "ó" | "p" |
+           "r" | "s" | "t" | "u" | "ú" |
+           "v" | "x" | "y" | "ý" | "þ" |
+           "æ" | "ö" | "å" | "ä" | "ø" |
+           "c" | "q" | "w" | "z" | "ü" | 
+           "ç" | "ë" ];
+
+
+# I also need to capitalize
+export ALPHABET = Optimize[
+           "A" | "Á" | "B" | "D" | "Ð" |
+           "E" | "É" | "F" | "G" | "H" |
+           "I" | "Í" | "J" | "K" | "L" |
+           "M" | "N" | "O" | "Ó" | "P" |
+           "R" | "S" | "T" | "U" | "Ú" |
+           "V" | "X" | "Y" | "Ý" | "Þ" |
+           "Æ" | "Ö" | "Å" | "Ä" | "Ø" |
+           "C" | "Q" | "W" | "Z" | "Ü" |
+           "Ç" | "Ë" ];
+
+export u8_punct = Optimize[
+           "." | "," | ":" | ";" | "?" |
+           "\"" | "\'" | "-" | "“" | "„" |
+           ")" | "(" | "!" | "&" | "\\" |
+           "«" | "»" | ">" | "<" | "…" |
+           "—" | "–" | "%" | "‰" | "/" |
+           "°" | "º" | "\[" | "\]" | "´" |
+           "…" | "+" ];
+
+stuff = Optimize[ "²" | "³" | "&" | "¼" | "¾" | "½"];
+
+export Digits = Optimize[
+        "1" | "2" | "3" | "4" | "5" |
+        "6" | "7" | "8" | "9" | "0" ];
+
+export dTeens = Optimize[
+         "10" | "11" | "12" | "13" | "14" |
+         "15" | "16" | "17" | "18" | "19" ];
+
+# export whole_alphabet = Optimize[alphabet | ALPHABET | " " | u8_punct | Digits | stuff];
+export whole_alphabet = Optimize[b.kBytes];
+
+export space = Optimize[
+    " " | "\t" | "\n" | "\r"
+];
+
+export NotSpace = Optimize[whole_alphabet - space];
+
+export Alnum = Optimize[Digits | alphabet];

@@ -1,0 +1,470 @@
+# Grammar file to expand abbreviations, numbers and ordinals
+#
+# Copyright 2017  Reykjavik University (Author: Inga Rún Helgadóttir)
+# Apache 2.0
+#
+# This grammar can be interactively tested by doing:
+#
+# thraxrewrite-tester --far=src/itn/abbreviate.far --rules=ABBR_AND_DENORM --noutput=1 --input_mode=byte --output_mode=byte
+
+# It can also be tested in the following way:
+# thraxrewrite-fileio --far=local/abbreviate.far --rules=ABBREVIATE
+# --noutput=1 --input_mode=byte --output_mode=byte <input-text-file>
+# <output-text-file>
+
+import 'src/itn/common.grm' as c;
+import 'src/itn/numbers.grm' as n;
+import 'src/itn/ordinals.grm' as o;
+
+# This transducer deletes a sequence of zero or more spaces:
+delspace = c.space* : "".byte;
+
+insspace = "".byte : " ".byte;
+
+unitnames = n.units;
+neutralunitnames = n.neutral_units;
+numbernames_11plus_and_0 = n.NUMBERNAMES_11_to_999999_and_0; #n.NUMBERNAMES_11plus_and_0;
+ordinalnames = o.ORDINALNAMES_to_abbreviate; # Does not expand 1.-10.
+ordinal = Invert[ordinalnames];
+#namesnumber = f.NAMESNUMBER2;
+
+ten = "tíu".byte : "10".byte;
+units = Invert[unitnames];
+neutralunits = Invert[neutralunitnames];
+
+units_plus = ten | units;
+neutralunits_plus = ten | neutralunits;
+
+#namesnumber = Invert[numbernames];
+namesnumber_11plus_and_0 = Invert[numbernames_11plus_and_0];
+
+# Abbreviations used in Alþingi paired with their expansions
+abbr = Optimize[StringFile['src/itn/lex/abbreviate_words.txt','byte','byte']];
+abbr2 = Optimize[StringFile['src/itn/lex/abbreviate_if_preceded_wNumber.txt','byte','byte']];
+abbr3 = Optimize[StringFile['src/itn/lex/abbreviate_if_followed_byNumber.txt','byte','byte']];
+first_to_tenth = Optimize[StringFile['src/itn/lex/first_to_tenth.txt','byte','byte']];
+half_expand = Optimize[StringFile['src/itn/lex/half.txt','byte','byte']];
+half = Invert[half_expand];
+kjordaemi = Optimize[StringFile['src/itn/lex/kjordaemi_abbr.txt','byte','byte']];
+
+ABBR_NUMBER_11plus_and_0 = Optimize[
+                     CDRewrite[namesnumber_11plus_and_0 delspace,
+                     ("[BOS]".byte | " ".byte),
+                     ("[EOS]".byte | " ".byte),
+                     c.whole_alphabet*,
+                     'ltr',
+                     'obl']];
+
+abbr_neutral_unit_CDbefore = Optimize[
+                     CDRewrite[neutralunits_plus,
+                     ("númer ".byte | "til ".byte),
+                     (" ".byte | "[EOS]".byte),
+                     c.whole_alphabet*,
+                     'ltr',
+                     'obl']];
+
+abbr_neutral_unit_CDafter = Optimize[
+                     CDRewrite[neutralunits_plus,
+                     ("[BOS]".byte | " ".byte),
+                     ( " til ".byte),
+                     c.whole_alphabet*,
+                     'ltr',
+                     'obl']];
+
+abbr_unit_CDbefore = Optimize[
+                     CDRewrite[units_plus,
+                     ("komma ".byte),
+                     (" ".byte | "[EOS]".byte),
+                     c.whole_alphabet*,
+                     'ltr',
+                     'obl']];
+
+abbr_unit_CDafter = Optimize[
+                    CDRewrite[units_plus,
+                    ("[BOS]".byte | " ".byte),
+                    " ".byte ("og hálf".byte c.alphabet* " ".byte)? ("komma".byte
+                    | "prósent".byte | "prómill".byte
+                    | "gráð".byte | "krón".byte | "milljarð".byte | "milljörðum".byte
+                    | "millj".byte c.alphabet+ " krón".byte
+                    | ("fer".byte | "rúm".byte)? ("kíló".byte | "sentí".byte? "metr".byte)
+                    | "gígav".byte | "megav".byte | "terav".byte),
+                    c.whole_alphabet*,
+                    'ltr',
+                    'obl']];
+
+abbr_half = Optimize[
+            CDRewrite[half delspace,
+            c.Digits,
+            (" ".byte | "[EOS]".byte),
+            c.whole_alphabet*,
+            'ltr',
+            'obl']];
+
+# I'm thinking about the case when I have f.ex. "zero point one three
+# seven"
+abbr_unit_CDbefore2 = Optimize[
+                      CDRewrite[units_plus,
+                      (c.Digits " ".byte),
+                      (" ".byte | "[EOS]".byte),
+                      c.whole_alphabet*,
+                      'ltr',
+                      'obl']];
+
+# Abbreviate "first" and "second" if a followed by any of the
+# following:
+abbr_first_to_tenth = Optimize[
+                     CDRewrite[first_to_tenth,
+                     (" ".byte | "[BOS]".byte),
+                     ( " árgang".byte | " grein".byte | " málsgrein".byte
+                     | " umræð".byte | " lið".byte | " minni hluta".byte
+                     | " tölulið".byte | " viðauk".byte
+                     | " varaþingm".byte | " þingm".byte
+                     | " janúar".byte | " febrúar".byte
+                     | " mars".byte | " apríl".byte | " maí".byte
+                     | " júní".byte | " júlí".byte | " ágúst".byte
+                     | " september".byte | " október".byte
+                     | " nóvember".byte | " desember".byte),
+                     c.whole_alphabet*,
+                     'ltr',
+                     'obl']];
+
+abbr_ratio = Optimize[
+             CDRewrite[units,
+             ("[BOS]".byte | " ".byte),
+             (" ".byte c.Digits ".".byte),
+             c.whole_alphabet*,
+             'ltr',
+             'obl']];
+
+ABBR_NUMBER = Optimize[ABBR_NUMBER_11plus_and_0 @
+abbr_neutral_unit_CDbefore @  abbr_unit_CDbefore @
+abbr_neutral_unit_CDafter @ abbr_unit_CDafter @
+abbr_unit_CDbefore2 @ abbr_first_to_tenth @ abbr_half @ abbr_ratio];
+
+
+# This abbreviates at least one rewritable word or number, per
+# senctence. But doesn't take in senctences containing numerals
+# and/or abbreviations (written as f.ex. 2, 4, t.d., hv.)
+# So we would loose utterances
+#export exp_tmp = Optimize[rewrite @ optional_exp @ EXPAND_WORD ];
+#export tmp = Invert[rewrite @ optional_exp @ word];
+ABBR_WORD = Optimize[
+                     CDRewrite[abbr delspace,
+                     ("[BOS]".byte | " ".byte),
+                     ("[EOS]".byte | " ".byte),
+                     c.whole_alphabet*,
+                     'ltr',
+                     'obl']];
+
+ORDINAL = ArcSort[Optimize[
+                     CDRewrite[ordinal delspace,
+                     ("[BOS]".byte | " ".byte),
+                     ("[EOS]".byte | " ".byte),
+                     c.whole_alphabet*,
+                     'sim',
+                     'obl']],
+                     'input']; # If have 'obl' instead, all "annars
+                     # vegar" and "dag einn..." will be abbreviated
+
+abbreviate1 = Optimize[ABBR_WORD @ ORDINAL @ ABBR_NUMBER];
+
+# Could I here add a fst that works on the output of the first
+# one. F.ex. checks if the previous word is a number??
+
+ABBR_WORD2 = CDRewrite[abbr2 delspace,
+                     (c.Digits+ ".".byte? " ".byte),
+                     ("[EOS]".byte | " ".byte),
+                     c.whole_alphabet*,
+                     'ltr',
+                     'obl'];
+
+nr = CDRewrite[("númer".byte : "nr".byte) delspace,
+               ("[BOS]".byte | " ".byte),
+               (" ".byte c.Digits+),
+               c.whole_alphabet*,
+               'ltr',
+               'obl'];
+
+abbreviate2 = ArcSort[Optimize[abbreviate1 @ ABBR_WORD2 @ nr],'input'];
+
+ABBR_WORD3 = Optimize[
+                     CDRewrite[abbr3 delspace,
+                     ("[BOS]".byte | " ".byte),
+                     (" ".byte ("lög nr ".byte | "lögum nr ".byte |
+                     "nr ".byte)? c.Digits+ ".".byte?),
+                     c.whole_alphabet*,
+                     'ltr',
+                     'obl']];
+
+ABBR_KJORDAEMI = CDRewrite[kjordaemi delspace,
+                     (c.Digits+ ".".byte " ".byte "þingm".byte
+                     c.alphabet+ " ".byte),
+                     ("[EOS]".byte | " ".byte),
+                     c.whole_alphabet*,
+                     'ltr',
+                     'obl'];
+
+export ABBREVIATE = ArcSort[
+                    Optimize[abbreviate2 @ ABBR_WORD3 @ ABBR_KJORDAEMI],
+                    'input'];
+
+# Denormalization
+middle_name_abbr_lex = Optimize[StringFile['src/itn/lex/alphabet.txt','byte','byte']];
+middle_name_abbr = Optimize[
+                      CDRewrite[middle_name_abbr_lex delspace,
+                      ("[BOS]".byte | " ".byte) c.ALPHABET
+                      c.alphabet+ " ".byte,
+                      (c.alphabet " ".byte)? " ".byte c.ALPHABET
+                      c.alphabet+ ("son".byte | "syni".byte |
+                      "dóttur".byte | "dóttir".byte | "sen".byte)
+                      c.u8_punct? ("[EOS]".byte | " ".byte),
+                      c.whole_alphabet*,
+                      'ltr',
+                      'obl']];
+
+personal_names = Optimize[StringFile['src/itn/lex/ambiguous_personal_names.txt','byte','byte']];
+amb_pers_names1 = Optimize[
+                      CDRewrite[personal_names delspace,
+                      ("[BOS]".byte | " ".byte),
+                      " ".byte c.ALPHABET c.alphabet+ ("son".byte "ar".byte? | "syni".byte |
+                      "dóttur".byte | "dóttir".byte | "sen".byte)
+                      c.u8_punct? ("[EOS]".byte | " ".byte),
+                      c.whole_alphabet*,
+                      'ltr',
+                      'obl']];
+
+amb_pers_names2 = Optimize[
+                      CDRewrite[personal_names delspace,
+                      ("[BOS]".byte | " ".byte),
+                      " ".byte c.ALPHABET c.alphabet+
+                      " ".byte c.ALPHABET c.alphabet+
+                      ("son".byte | "syni".byte |
+                      "dóttur".byte | "dóttir".byte | "sen".byte)
+                      c.u8_punct? ("[EOS]".byte | " ".byte),
+                      c.whole_alphabet*,
+                      'ltr',
+                      'obl']];
+
+name_casing = Optimize[middle_name_abbr @ amb_pers_names1 @
+amb_pers_names2];
+
+acro_denorm_lex = Optimize[StringFile['src/itn/lex/acro_denormalize.txt','byte','byte']];
+acro_denorm = CDRewrite[acro_denorm_lex,
+                     ("[BOS]".byte | " ".byte),
+                     ("[EOS]".byte | " ".byte),
+                     c.whole_alphabet*,
+                     'ltr',
+                     'obl'];
+
+law_nr1 = CDRewrite[(" ".byte : "/".byte),
+                c.Digits+,
+                ("EBE".byte | "EB".byte | "ESB".byte),
+                c.whole_alphabet*,
+                'ltr',
+                'obl'];
+
+law_nr2 = CDRewrite[(" ".byte : "/".byte) | (" frá ".byte : "/".byte),
+                c.Digits+,
+                c.Digits+ "/".byte ("EBE".byte | "EB".byte | "ESB".byte),
+                c.whole_alphabet*,
+                'ltr',
+                'obl'];
+
+law_nr3 = CDRewrite[(" ".byte : "/".byte) | (" frá ".byte : "/".byte),
+                "nr ".byte c.Digits+,
+                c.Digits+,
+                c.whole_alphabet*,
+                'ltr',
+                'obl'];
+
+law_nr = Optimize[law_nr1 @ law_nr2 @ law_nr3];
+
+endash = CDRewrite[(" til ".byte : "–".byte),
+                c.Digits+,
+                c.Digits+,
+                c.whole_alphabet*,
+                'ltr',
+                'obl'];
+
+kl = CDRewrite[(" ".byte : ":".byte),
+                "kl ".byte c.Digits+,
+                c.Digits+,
+                c.whole_alphabet*,
+                'ltr',
+                'obl'];
+
+decimal1 = CDRewrite[(" komma ".byte : ",".byte),
+                c.Digits+,
+                c.Digits+,
+                c.whole_alphabet*,
+                'ltr',
+                'obl'];
+
+decimal2 = CDRewrite[delspace,
+                c.Digits+ ",".byte c.Digits+,
+                c.Digits c.Digits? ("[EOS]".byte | " ".byte),
+                c.whole_alphabet*,
+                'ltr',
+                'obl'];
+
+ratio1 = CDRewrite[(" ".byte : "/".byte),
+                ("[BOS]".byte | " ".byte) c.Digits,
+                c.Digits ".".byte,
+                c.whole_alphabet*,
+                'ltr',
+                'obl'];
+
+ratio2 = CDRewrite[(".".byte : "".byte),
+                ("[BOS]".byte | " ".byte) c.Digits "/".byte c.Digits,
+                ("[EOS]".byte | " ".byte),
+                c.whole_alphabet*,
+                'ltr',
+                'obl'];
+
+rm_space_bf_punct = CDRewrite[delspace,
+                c.Digits,
+                ("°".byte | "%".byte | "‰".byte),
+                c.whole_alphabet*,
+                'ltr',
+                'obl'];
+
+celsius = CDRewrite[(" á".byte?" Celsíus".byte : "C".byte),
+                "°".byte,
+                ("[EOS]".byte | " ".byte),
+                c.whole_alphabet*,
+                'ltr',
+                'obl'];
+
+url1 = CDRewrite[(" ".byte : "://".byte),
+                "http".byte "s".byte?,
+                "www".byte,
+                c.whole_alphabet*,
+                'ltr',
+                'obl'];
+
+url2 = CDRewrite[(" ".byte : ".".byte),
+                "www".byte,
+                c.Alnum+,
+                c.whole_alphabet*,
+                'ltr',
+                'obl'];
+
+url3 = CDRewrite[(" punktur ".byte : ".".byte),
+                c.Alnum+,
+                ("is".byte | "net".byte | "com".byte),
+                c.whole_alphabet*,
+                'ltr',
+                'obl'];
+
+url = Optimize[url1 @ url2 @ url3];
+
+ogeda = CDRewrite[(" ".byte : "/".byte),
+                "og".byte,
+                "eða".byte,
+                c.whole_alphabet*,
+                'ltr',
+                'obl'];
+
+committee = CDRewrite[("".byte : "-".byte),
+                ("allsherjar".byte | "efnahags".byte | "stjórnskipunar".byte | "umhverfis".byte),
+                " og ".byte c.alphabet+ "nefnd".byte,
+                c.whole_alphabet*,
+                'ltr',
+                'obl'];
+
+minister = CDRewrite[("".byte : "-".byte),
+                ("dóms".byte | "EES".byte | "efnahags".byte
+                | "félagsmála".byte | "félags".byte | "ferðamála".byte
+                | "fjármála".byte | "heilbrigðis".byte
+                | "iðnaðar".byte | "jafnréttis".byte | "landbúnaðar".byte
+                | "mennta".byte | "nýsköpunar".byte | "samgöngu".byte
+                | "sjávarútvegs".byte | "umhverfis".byte | "viðskipta".byte),
+                " og ".byte c.alphabet+ "ráðherra".byte,
+                c.whole_alphabet*,
+                'ltr',
+                'obl'];
+
+ministry = CDRewrite[("".byte : "-".byte),
+                ("atvinnu".byte | "atvinnuvega".byte | "auðlinda".byte
+                | "byggða".byte | "dóms".byte | "dómsmála".byte | "efnahags".byte
+                | "félags".byte | "fjármála".byte | "forsætis".byte
+                | "heilbrigðis".byte | "iðnaðar".byte | "innanríkis".byte | "landbúnaðar".byte
+                | "mennta".byte | "samgöngu".byte | "sjávarútvegs".byte
+                | "umhverfis".byte | "velferðar".byte| "viðskipta".byte),
+                " og ".byte c.alphabet+ "ráðuneyt".byte,
+                c.whole_alphabet*,
+                'ltr',
+                'obl'];
+
+# Add dash into words, e.g. "EFTA-þjóðirnar"
+dash = Optimize[StringFile['src/itn/lex/dash.txt','byte','byte']];
+insert_dash = CDRewrite[dash,
+                     ("[BOS]".byte | " ".byte),
+                     "".byte,
+                     c.whole_alphabet*,
+                     'ltr',
+                     'obl'];
+
+dr = CDRewrite[("doktor".byte : "dr".byte),
+                " ".byte,
+                " ".byte c.ALPHABET c.alphabet+,
+                c.whole_alphabet*,
+                'ltr',
+                'obl'];
+
+vg = CDRewrite[(" ".byte : " – ".byte),
+                "Vinstrihreyfing".byte c.alphabet+,
+                "græn".byte c.alphabet+,
+                c.whole_alphabet*,
+                'ltr',
+                'obl'];
+
+#upptalning_lex = Optimize[StringFile['src/itn/lex/ordinals_neutral_3-9.txt','byte','byte']];
+#upptalning = CDRewrite[upptalning_lex,
+                # ("Í ".byte | "í ".byte),
+                # " lagi ".byte,
+                # c.whole_alphabet*,
+                # 'ltr',
+                # 'obl'];
+
+DENORM = Optimize[name_casing @ acro_denorm @ law_nr @ endash @ kl @
+decimal1 @ decimal2 @ ratio1 @ ratio2 @ rm_space_bf_punct @ celsius @
+url @ ogeda @ committee @ minister @ ministry @ insert_dash @ dr @ vg];
+
+export ABBR_AND_DENORM = ArcSort[
+                    Optimize[ABBREVIATE @ DENORM],
+                    'input'];
+
+# The following happens after the punctuation model is applied
+delspace_in_tags = CDRewrite[("< ".byte : "<".byte) | (" >".byte : ">".byte),
+                "".byte,
+                "".byte,
+                c.whole_alphabet*,
+                'ltr',
+                'obl'];
+
+ins_periods =
+Optimize[StringFile['src/itn/lex/abbr_periods.txt','byte','byte']];
+
+INS_PERIODS = CDRewrite[ins_periods,
+                     ("[BOS]".byte | " ".byte),
+                     (".".byte? | ",".byte? | "?".byte? | "!".byte? | ":".byte?) ("[EOS]".byte | " ".byte),
+                     c.whole_alphabet*,
+                     'ltr',
+                     'obl'];
+
+export INSERT_PERIODS = Optimize[rm_space_bf_punct @ delspace_in_tags @ INS_PERIODS];
+
+
+export ITN = ABBR_AND_DENORM @ INSERT_PERIODS;
+
+# REMOVE_PERIODS if for removing periods from abbreviations, when
+# cleaning a new speech, before adding it to our language model texts
+# and any new words to the vocabulary.
+rm_periods = Invert[ins_periods];
+export REMOVE_PERIODS = CDRewrite[rm_periods,
+                     ("[BOS]".byte | " ".byte),
+                     ("[EOS]".byte | " ".byte),
+                     c.whole_alphabet*,
+                     'ltr',
+                     'obl'];

@@ -1,0 +1,194 @@
+# Expand numbers to numbernames
+#
+# Copyright 2017  Reykjavik University (Author: Inga Rún Helgadóttir)
+# Apache 2.0
+
+import 'src/itn/common.grm' as c;
+
+insspace = "" : " ";
+
+zero  = "0" : "núll";
+
+delzero = "0" : "";
+delone = "1" : "";
+insand = "" : " og ";
+
+units_notNeutral = Optimize[StringFile['src/itn/lex/units_notNeutral.txt', 'byte', 'byte']];
+one = "1" : "eitt";
+export neutral_units2to9 = Optimize[StringFile['src/itn/lex/neutral_units2to9.txt', 'byte', 'byte']];
+export neutral_units = one | neutral_units2to9;
+export units = units_notNeutral | neutral_units;
+
+ten = "10" : "tíu";
+teens =   ("11" : "ellefu")
+        | ("12" : "tólf")
+        | ("13" : "þrettán")
+        | ("14" : "fjórtán")
+        | ("15" : "fimmtán")
+        | ("16" : "sextán")
+        | ("17" : "sautján")
+        | ("18" : "átján")
+        | ("19" : "nítján");
+teensplus = ten | teens;
+
+decades =   ("2" : "tuttugu")
+          | ("3" : "þrjátíu")
+          | ("4" : "fjörutíu")
+          | ("5" : "fimmtíu")
+          | ("6" : "sextíu")
+          | ("7" : "sjötíu")
+          | ("8" : "áttatíu")
+          | ("9" : "níutíu");
+
+export numbers_20_to_99 = (decades delzero) |
+  decades insand ((units_notNeutral <-3>) | (neutral_units <-4.0>));
+
+export teensplus_and_round_numbers_20_to_90 = teensplus | (decades delzero);
+
+export non_round_numbers_21_to_99 = decades insand ((units_notNeutral <-3>) | (neutral_units <-4.0>));
+
+numbers_to_99 = Optimize[ zero | (units <-0.5>) | (teensplus <-1>) | (numbers_20_to_99  <-2>)];
+
+hundreds = (((one insspace | (delone <-3.0>))
+  ("" : "hundrað")) | (neutral_units2to9 insspace ("" : "hundruð")));
+
+numbers_100_to_999 = Optimize[
+  hundreds delzero delzero |
+  (hundreds delzero insand units <-1>) |
+  (hundreds insand teensplus_and_round_numbers_20_to_90 <-2>) |
+  (hundreds insspace non_round_numbers_21_to_99 <-10>)]
+;
+
+year = Optimize[
+  ((teens insspace ("" : "hundruð")
+  (delzero delzero |
+  (delzero insand neutral_units <-1>) |
+  (insand teensplus_and_round_numbers_20_to_90 <-2>) |
+  (insspace non_round_numbers_21_to_99 <-10>)))
+  | (neutral_units2to9 insspace ("" : "þúsund")
+  delzero delzero insand neutral_units))]
+;
+
+# I add "og" here since learning that rule didn't
+# happen from Leipzig
+tail_1000_to_9999 = Optimize[
+  ("" : "þúsund")
+  (delzero delzero delzero |
+  (delzero delzero insand units <-4>) |
+  (delzero insand teensplus_and_round_numbers_20_to_90 <-6>) |
+  (delzero insspace non_round_numbers_21_to_99 <-6>) |
+  ((insspace | insand) numbers_100_to_999 <-8>))]
+;
+
+numbers_1000_to_9999 = Optimize[
+  ((neutral_units2to9 insspace <-10>) | one | delone)
+  tail_1000_to_9999]
+;
+
+numbers_10000_to_99999 = Optimize[
+  (teensplus | numbers_20_to_99)
+  insspace
+  tail_1000_to_9999]
+;
+
+numbers_100000_to_999999 = Optimize[
+  numbers_100_to_999
+  insspace
+  tail_1000_to_9999]
+;
+
+#ein milljón og eitt þúsund
+tail_1M_to_9M = Optimize[
+  ("" : ("milljón" | "milljónar" |
+  "milljónir" | "milljónum" | "milljóna" ))
+  (delzero delzero delzero delzero delzero delzero |
+  (delzero delzero delzero delzero delzero insand units <-4>) |
+  (delzero delzero delzero delzero insand teensplus_and_round_numbers_20_to_90 <-6>) |
+  (delzero delzero delzero delzero insspace non_round_numbers_21_to_99 <-6>) |
+  (delzero delzero delzero (insspace | insand) numbers_100_to_999 <-8>) |
+  (delzero delzero (insspace | insand) numbers_1000_to_9999 <-50>) |
+  (delzero (insspace | insand) numbers_10000_to_99999 <-60>) |
+  ((insspace | insand) numbers_100000_to_999999 <-150>))]
+;
+
+numbers_1M_to_9M = Optimize[
+  ((units_notNeutral <-1>) | delone)
+  insspace
+  tail_1M_to_9M]
+;
+
+numbers_10M_to_99M = Optimize[
+  (teensplus | numbers_20_to_99)
+  insspace
+  tail_1M_to_9M]
+;
+
+numbers_100M_to_999M = Optimize[
+  numbers_100_to_999
+  insspace
+  tail_1M_to_9M]
+;
+
+export NUMBERNAMES = Optimize[
+  numbers_to_99 |
+  (numbers_100_to_999 <-3>) |
+  (numbers_1000_to_9999 <-16>) |
+  (numbers_10000_to_99999 <-32>) |
+  (numbers_100000_to_999999 <-64>) |
+  (numbers_1M_to_9M  <-150>) |
+  (numbers_10M_to_99M <-300>) |
+  (numbers_100M_to_999M <-600>) |
+  (year <-30.0>) ]
+;
+
+# export NUMBERNAMES_10plus_and_0 = Optimize[
+#   numbers_10_to_99 |
+#   (numbers_100_to_999 <-3>) |
+#   (numbers_1000_to_9999 <-16>) |
+#   (numbers_10000_to_99999 <-32>) |
+#   (numbers_100000_to_999999 <-64>) |
+#   (numbers_1M_to_9M  <-150>) |
+#   (year <-30.0>) ]
+# ;
+
+numbers_10_to_99 = Optimize[ zero | (teensplus <-1>) | (numbers_20_to_99  <-2>)];
+export NUMBERNAMES_10_to_999999_and_0 = Optimize[
+  numbers_10_to_99 |
+  (numbers_100_to_999 <-3>) |
+  (numbers_1000_to_9999 <-16>) |
+  (numbers_10000_to_99999 <-32>) |
+  (numbers_100000_to_999999 <-128>) |
+  (year <-30.0>) ]
+;
+
+numbers_11_to_99 = Optimize[ zero | (teens <-1>) | (numbers_20_to_99  <-2>)];
+export NUMBERNAMES_11_to_999999_and_0 = Optimize[
+  numbers_11_to_99 |
+  (numbers_100_to_999 <-3>) |
+  (numbers_1000_to_9999 <-16>) |
+  (numbers_10000_to_99999 <-32>) |
+  (numbers_100000_to_999999 <-128>) |
+  (year <-30.0>) ]
+;
+
+# export add_and = CDRewrite[
+#   " " : " og ",
+#   c.alphabet+,
+#   c.alphabet+,
+#   c.whole_alphabet*,
+#   'rtl',
+#   'opt']
+# ;
+
+#export NUMBERNAMES = Optimize[numbers @ add_and];
+
+# Obligatory CDrewrites, no path has non-expanded numbers (this FST
+# accepts all strings)
+#delspace = (" " : "");
+# export EXPANDNUMS = ArcSort[Optimize[
+#                           CDRewrite[NUMBERNAMES,
+#                                     ("[BOS]" | " "),
+#                                     ("[EOS]" | " " | c.u8_punct),
+#                                     c.whole_alphabet*,
+#                                     'ltr',
+#                                     'obl']], 'input'];

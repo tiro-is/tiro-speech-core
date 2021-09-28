@@ -1,0 +1,12 @@
+Norðausturkjördæmi	Norðaust
+Norðausturkjördæmis	Norðaust
+Norðvesturkjördæmi	Norðvest
+Norðvesturkjördæmis	Norðvest
+Reykjavíkurkjördæmi norður	Reykv n
+Reykjavíkurkjördæmis norður	Reykv n
+Reykjavíkurkjördæmi suður	Reykv s
+Reykjavíkurkjördæmis suður	Reykv s
+Suðurkjördæmi	Suðurk
+Suðurkjördæmis	Suðurk
+Suðvesturkjördæmi	Suðvest
+Suðvesturkjördæmis	Suðvest

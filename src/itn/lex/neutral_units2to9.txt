@@ -1,0 +1,8 @@
+2	tvö
+3	þrjú
+4	fjögur
+5	fimm
+6	sex
+7	sjö
+8	átta
+9	níu

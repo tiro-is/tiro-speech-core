@@ -1,0 +1,116 @@
+árgangur	árg
+árgangi	árg
+blaðsíða	bls
+blaðsíðu	bls
+blaðsíður	bls
+danskar krónur	dkr
+ferkílómetra	km²
+ferkílómetrar	km²
+ferkílómetrum	km²
+fermetra	m²
+fermetrar	m²
+fermetrum	m²
+fersentímetra	cm²
+fersentímetrar	cm²
+fersentímetrum	cm²
+gráða	°
+gráðu	°
+gráður	°
+gráðum	°
+grein	gr
+greinar	gr
+gígavatt	gW
+gígavatti	gW
+gígavött	gW
+gígavöttum	gW
+gígavatta	gW
+gígavattstund	gwst
+gígavattstunda	gwst
+gígavattstundir	gwst
+gígavattstundum	gwst
+íslenskar krónur	ísl kr
+íslenskra króna	ísl kr
+íslenskum krónum	ísl kr
+kílógramm	kg
+kílógrammi	kg
+kílógrömm	kg
+kílógrömmum	kg
+kílógramma	kg
+kílómetri	km
+kílómetra	km
+kílómetrar	km
+kílómetrum	km
+kílóvatt	kW
+kílóvatti	kW
+kílóvött	kW
+kílóvöttum	kW
+kílóvatta	kW
+kílóvattstund	kwst
+kílóvattstunda	kwst
+kílóvattstundir	kwst
+kílóvattstundum	kwst
+króna	kr
+krónu	kr
+krónum	kr
+krónur	kr
+metri	m
+metra	m
+metrar	m
+metrum	m
+málsgrein	mgr
+málsgreinar	mgr
+megavatt	mW
+megavatti	mW
+megavött	mW
+megavöttum	mW
+megavatta	mW
+megavattstund	mwst
+megavattstundir	mwst
+megavattstundum	mwst
+megavattstunda	mwst
+milljarður króna	milljarður kr
+milljarð króna	milljarð kr
+milljarði króna	milljarði kr
+milljarðs króna	milljarðs kr
+milljarðar króna	milljarðar kr
+milljarða króna	milljarða kr
+milljörðum króna	milljörðum kr
+milljóna króna	millj kr
+milljónar króna	millj kr
+milljónir króna	millj kr
+milljónum króna	millj kr
+milljón krónur	millj kr
+norskar krónur	nkr
+prómill	‰
+prómill	‰
+prómilli	‰
+prómills	‰
+prómillum	‰
+prómilla	‰
+prósent	%
+prósenti	%
+prósents	%
+prósentum	%
+prósenta	%
+rúmmetri	m³
+rúmmetra	m³
+rúmmetrar	m³
+rúmmetrum	m³
+rúmsentímetri	cm³
+rúmsentímetra	cm³
+rúmsentímetrar	cm³
+rúmsentímetrum	cm³
+sentímetri	cm
+sentímetra	cm
+sentímetrar	cm
+sentímetrum	cm
+sænskar krónur	skr
+teravatt	tW
+teravatti	tW
+teravött	tW
+teravöttum	tW
+teravatta	tW
+teravattstund	twst
+teravattstundir	twst
+teravattstundum	twst
+teravattstunda	twst
