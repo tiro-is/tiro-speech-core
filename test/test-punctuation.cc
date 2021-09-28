@@ -249,3 +249,34 @@ TEST_CASE("ElectraPunctuator can punctute", "[itn]") {
                  Catch::Matchers::Equals(expected_capitalized));
   }
 }
+
+TEST_CASE("ElectraPuntuator can handle input with punctuation tokens",
+          "[itn]") {
+  using namespace tiro_speech;
+  using namespace tiro_speech::itn;
+
+  ElectraPunctuatorConfig opts{};
+  opts.pytorch_jit_model_filename =
+      std::filesystem::path{std::getenv("TEST_SRCDIR")} /
+      "clarin_electra_punctuation_model_traced/file/traced_electra.pt";
+  opts.word_piece_opts.vocab_filename =
+      std::filesystem::path{std::getenv("TEST_SRCDIR")} /
+      "clarin_electra_punctuation_vocab/file/vocab.txt";
+
+  ElectraPunctuator punctuator{opts};
+
+  const std::vector<std::string> words{
+      "síminn", "var", "999-8888", "þetta",   "gerðist", "a.m.k.", "kl.",
+      "12:11",  "á",   "árunum",   "2018–20", "það",     "var",    "slæmt"};
+  CAPTURE(words);
+
+  // Note that this is not necessarily *correct*, just what we expect from the
+  // punctuation model
+  const std::vector<std::string> expected_words{
+      "síminn", "var", "999-8888.", "Þetta",    "gerðist", "a.m.k.,", "kl.",
+      "12:11",  "á",   "árunum",    "2018–20.", "Það",     "var",     "slæmt"};
+
+  auto punctuated_words = punctuator.Punctuate(words, /* capitalize */ true);
+
+  REQUIRE_THAT(punctuated_words, Catch::Equals(expected_words));
+}
