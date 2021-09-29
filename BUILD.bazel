@@ -98,6 +98,16 @@ cc_library(
 )
 
 cc_binary(
+    name = "prepare_lexicon_fst",
+    srcs = [
+        "src/bin/prepare_lexicon_fst_main.cc",
+    ],
+    deps = [
+        ":tiro_speech",
+    ],
+)
+
+cc_binary(
     name = "tiro_speech_server",
     srcs = [
         "src/bin/server_main.cc",
