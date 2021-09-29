@@ -198,8 +198,44 @@ bool Recognizer::GetResults(int32_t max_alternatives,
     return false;
   }
 
-  std::vector<std::string> first_word_symbols{};
-  for (size_t idx = 0; idx < lats.size(); ++idx) {
+  if (model_.formatter != nullptr) {
+    TIRO_SPEECH_DEBUG("Formatting best aligned hypothesis");
+    *best_aligned =
+        model_.formatter->FormatWords(*model_.word_syms, *best_aligned);
+  }
+
+  std::vector<std::string> first_word_symbols;
+  for (const auto& aligned_word : *best_aligned) {
+    first_word_symbols.push_back(aligned_word.word_symbol);
+  }
+
+  if (punctuate && model_.punctuator != nullptr) {
+    std::vector<std::string> left_context_symbols;
+    for (const AlignedWord& ali : left_context_) {
+      left_context_symbols.push_back(ali.word_symbol);
+    }
+
+    first_word_symbols = model_.punctuator->PunctuateWithContext(
+        first_word_symbols, left_context_symbols, /* capitalize */ true);
+
+    // TODO(rkjaran): Figure out when to append punctuation at the end, which
+    //                is something the model never (?) does.
+    if (end_of_utt && left_context_.size() == 0) {
+      itn::Capitalize(first_word_symbols.at(0));
+    }
+
+    // The first transcript and best_aligned should be the same string
+    for (std::size_t sym_idx = 0; sym_idx < best_aligned->size(); ++sym_idx) {
+      (*best_aligned)[sym_idx].word_symbol = first_word_symbols[sym_idx];
+    }
+    if (end_of_utt && !best_aligned->empty()) {
+      left_context_ = *best_aligned;
+    }
+  }
+
+  transcripts->push_back(Join(first_word_symbols, " "));
+
+  for (size_t idx = 1; idx < lats.size(); ++idx) {
     std::vector<int32> words;
     if (!fst::GetLinearSymbolSequence<kaldi::LatticeArc, int32>(
             lats[idx], /* alignment */ nullptr, &words, /* weight */ nullptr)) {
@@ -209,32 +245,6 @@ bool Recognizer::GetResults(int32_t max_alternatives,
     for (const auto word_id : words) {
       if (word_id == 0) continue;
       word_symbols.push_back(model_.word_syms->Find(word_id));
-    }
-
-    if (punctuate && model_.punctuator != nullptr) {
-      std::vector<std::string> left_context_symbols;
-      for (const AlignedWord& ali : left_context_) {
-        left_context_symbols.push_back(ali.word_symbol);
-      }
-      word_symbols = model_.punctuator->PunctuateWithContext(
-          word_symbols, left_context_symbols, /* capitalize */ true);
-
-      // TODO(rkjaran): Figure out when to append punctuation at the end, which
-      //                is something the model never (?) does.
-      if (end_of_utt && left_context_.size() == 0) {
-        itn::Capitalize(word_symbols.at(0));
-      }
-
-      if (idx == 0) {
-        // The first transcript and best_aligned should be the same string
-        for (std::size_t sym_idx = 0; sym_idx < best_aligned->size();
-             ++sym_idx) {
-          (*best_aligned)[sym_idx].word_symbol = word_symbols[sym_idx];
-        }
-        if (end_of_utt && !best_aligned->empty()) {
-          left_context_ = *best_aligned;
-        }
-      }
     }
 
     transcripts->push_back(Join(word_symbols, " "));

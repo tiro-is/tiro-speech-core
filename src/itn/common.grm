@@ -47,8 +47,7 @@ export dTeens = Optimize[
          "10" | "11" | "12" | "13" | "14" |
          "15" | "16" | "17" | "18" | "19" ];
 
-# export whole_alphabet = Optimize[alphabet | ALPHABET | " " | u8_punct | Digits | stuff];
-export whole_alphabet = Optimize[b.kBytes];
+export whole_alphabet = Optimize[alphabet | ALPHABET | " " | u8_punct | Digits | stuff];
 
 export space = Optimize[
     " " | "\t" | "\n" | "\r"

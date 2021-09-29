@@ -18,6 +18,7 @@
 #include <filesystem>
 #include <system_error>
 
+#include "src/itn/formatter.h"
 #include "src/logging.h"
 #include "src/options.h"
 #include "src/scoped-chdir.h"
@@ -43,6 +44,15 @@ void KaldiModelConfig::Check() const {
     error_occured = true;
     TIRO_SPEECH_ERROR("Flag language_code can't be empty.");
   }
+  if ((!formatter_config.lexicon_fst_filename.empty() &&
+       formatter_config.lexicon_fst_filename.empty()) ||
+      (formatter_config.lexicon_fst_filename.empty() &&
+       !formatter_config.lexicon_fst_filename.empty())) {
+    error_occured = true;
+    TIRO_SPEECH_ERROR(
+        "Both formatter.lexicon-fst AND formatter.rewrite-fst have to be set");
+  }
+
   if (error_occured) {
     TIRO_SPEECH_FATAL("Got invalid configuration for KaldiModel.");
   }
@@ -92,6 +102,11 @@ KaldiModel::KaldiModel(const KaldiModelConfig& config)
       !config.punctuator_config.word_piece_opts.vocab_filename.empty()) {
     punctuator =
         std::make_shared<itn::ElectraPunctuator>(config.punctuator_config);
+  }
+
+  if (!config.formatter_config.lexicon_fst_filename.empty() &&
+      !config.formatter_config.rewrite_fst_filename.empty()) {
+    formatter = std::make_shared<itn::Formatter>(config.formatter_config);
   }
 }
 

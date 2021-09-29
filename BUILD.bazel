@@ -93,6 +93,7 @@ cc_library(
         "@pytorch//:torch_cpu",
         "@icu//:common",
         "@moodycamel_readerwriterqueue",
+        "@org_opengrm_thrax//:thrax",
     ],
 )
 

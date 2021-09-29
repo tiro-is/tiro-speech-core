@@ -17,6 +17,7 @@
 #include <unicode/unistr.h>
 
 #include "src/itn/formatter.h"
+#include "src/logging.h"
 
 namespace tiro_speech::itn {
 
@@ -28,7 +29,21 @@ const std::array<std::string, 4> kIdToLabel{"O", "COMMA", "PERIOD",
 const std::array<std::string, 4> kIdToChar{"", ",", ".", "?"};
 const std::array<bool, 4> kIdToCapitalizeNext{false, false, true, true};
 
-bool ShouldCapitalizeNext(int id) { return kIdToCapitalizeNext.at(id); }
+std::string IdToChar(int id) {
+  if (id >= kIdToChar.size()) {
+    TIRO_SPEECH_WARN("Suspicious punctuation id: {}", id);
+    return kIdToChar.at(0);
+  }
+  return kIdToChar.at(id);
+}
+
+bool ShouldCapitalizeNext(int id) {
+  if (id >= kIdToCapitalizeNext.size()) {
+    TIRO_SPEECH_WARN("Suspicious punctuation id: {}", id);
+    return false;
+  }
+  return kIdToCapitalizeNext.at(id);
+}
 
 bool ShouldCapitalizeNext(char character) {
   switch (character) {
@@ -88,7 +103,7 @@ std::vector<std::string> ElectraPunctuator::Punctuate(
       }
       capitalize_next = ShouldCapitalizeNext(punctuation[idx]);
     }
-    output_words[idx] += kIdToChar.at(punctuation[idx]);
+    output_words[idx] += IdToChar(punctuation[idx]);
   }
 
   return output_words;
