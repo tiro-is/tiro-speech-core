@@ -1,0 +1,109 @@
+
+SKAMMSTAFANIR vegna talgreiningarverkefnis
+ 
+háttvirtur/háttvirtan/háttvirtum/háttvirts/háttvirtir/háttvirta/háttvirtra = hv.
+þingmaður/þingmann/þingmanni/þingmanns = þm.
+aths. við skammstöfum bara þm. ef númer og kjördæmi fylgir með
+hæstvirtur/hæstvirtan/hæstvirtum/hæstvirts = hæstv.
+ 
+fyrsti/fyrsta/fyrstum = 1.
+annar/annan/öðrum/annars = 2.
+þriðji/þriðja = 3.
+fjórði/fjórða = 4.
+fimmti/fimmta = 5.
+sjötti/sjötta = 6.
+sjöundi/sjöunda = 7.
+áttundi/áttunda = 8.
+níundi/níunda = 9.
+tíundi/tíunda = 10.
+ellefti/ellefta = 11.
+ 
+Reykjavíkurkjördæmi = Reykv.
+Suðvesturkjördæmi = Suðvest.
+Suðurkjördæmi = Suðurk.
+Norðausturkjördæmi = Norðaust.
+Norðvesturkjördæmi = Norðvest.
+ 
+ein milljón króna/eina milljón króna/einni milljón króna/einnar milljónar króna = 1.000.000 kr.
+tvær milljónir króna/tveimur milljónum króna/tveggja milljóna króna = 2.000.000 kr.
+þrjár milljónir króna/þremur milljónum króna/þriggja milljóna króna = 3.000.000 kr.
+fjórar milljónir króna/fjórum milljónum króna/fjögurra milljóna króna = 4.000.000 kr.
+fimm milljónir króna/fimm milljónum króna/fimm milljóna króna = 5.000.000 kr.
+sex milljónir króna/sex milljónum króna/sex milljóna króna = 6.000.000 kr.
+sjö milljónir króna/sjö milljónum króna/sjö milljóna króna = 7.000.000 kr.
+átta milljónir króna/átta milljónum króna/átta milljóna króna = 8.000.000 kr.
+ 
+króna/krónu/krónur/krónum/króna = kr.
+            aths. við skammstöfum kr. á eftir tölum, ekki t.d. þegar verið er að tala um íslenskar krónur, danskar krónur eða þess háttar.
+ 
+
+ 
+
+ein og hálf = 1,5
+tvær og hálf = 2,5
+þrjár og hálf = 3,5
+fjórar og hálf = 4,5
+fimm og hálf = 5,5
+sex og hálf = 6,5
+sjö og hálf = 7,5
+átta og hálf = 8,5
+níu og hálf = 9,5
+tíu og hálf = 10,5
+ellefu og hálf = 11,5
+tólf og hálf = 12,5
+            aths. við breytum því þegar menn nota og hálf        
+ 
+að minnsta kosti = a.m.k.
+blaðsíðu = bls.
+e há eff = ehf.
+ef til vill = e.t.v.
+grein/greinar = gr.
+            aths. við skammstöfum aðeins þegar númer greinar fylgir með, ekki þegar talað er um þessa grein eða hina
+málsgrein/málsgreinar = mgr.
+            aths. sömu reglur og um grein
+þingskjal = þskj.
+                aths. ef númer skjalsins kemur með er skammstafað, annars ekki
+ 
+há eff = hf.
+meðal annars = m.a.
+meira að segja = m.a.s.
+næstkomandi = nk.
+og fleira = o.fl.
+og svo framvegis = o.s.frv.
+síðastliðinn/síðastliðnum = sl.
+til dæmis = t.d.
+um það bil = u.þ.b.
+það er/það er að segja = þ.e.
+            aths. við notum aldrei skammstöfunina þ.e.a.s. þó svo að sagt sé það er að segja
+ 
+lög númer þrjátíu og þrjú nítján hundruð fjörutíu og fjögur = lög nr. 33/1944
+samkvæmt lögum númer þrjátíu og þrjú nítján hundruð fjörutíu og fjögur = samkvæmt lögum nr. 33/1944
+vegna laga númer þrjátíu og þrjú nítján hundruð fjörutíu og fjögur =  vegna laga nr. 33/1944
+ 
+hundrað fertugasta og fimmta þing/löggjafarþing = 145. þing/löggjafarþing
+hundrað fertugasta og fimmta þingi/löggjafarþingi = 145. þingi/löggjafarþingi
+hundrað fertugasta og fimmta þings/löggjafarþings = 145. þings/löggjafarþings
+
+ATH! Ætti ég að umrita til baka eftirfarandi??
+misseri/misseris = missiri/missiris
+forysta/forystu = forusta/forustu
+myndi/myndu = mundi/mundu
+ 
+framkvæmdavald = framkvæmdarvald
+virkjunarkostur/virkjunarkost/virkjunarkosti/virkjunarkosts –  virkjunarkostir/virkjunarkosti/ virkjunarkostum/virkjunarkosta
+verkefnisstjórn/verkefnisstjórnar – verkefnisstjórnir/verkefnisstjórnum/verkefnisstjórna
+ 
+enn fremur
+enn þá
+fram hjá
+fyrir fram
+meiri háttar
+meiri hluti
+minni hluti
+ 
+alllengi
+öðruvísi
+
+
+númer = nr.
+tölul. = töluliður

@@ -1,0 +1,71 @@
+# Expand ordinals
+#
+# Copyright 2017  Reykjavik University (Author: Inga Rún Helgadóttir)
+# Apache 2.0
+
+import 'src/itn/common.grm' as c;
+import 'src/itn/numbers.grm' as n;
+
+insspace = "".byte : " ".byte;
+
+delzero = "0".byte : "".byte;
+delone  = "1".byte : "".byte;
+delperiod = ".".byte : "".byte;
+insand = "".byte : " og ".byte;
+
+ordUnits = Optimize[StringFile['src/itn/lex/ordinals_units_lexicon.txt',
+'byte', 'byte']];
+
+ordTeens = Optimize[StringFile['src/itn/lex/ordinals_teens_lexicon.txt', 'byte', 'byte']];
+
+ordDecades = Optimize[StringFile['src/itn/lex/ordinals_decades_lexicon.txt', 'byte', 'byte']];
+
+ordinals_20_to_99 = ordDecades delzero delperiod | (ordDecades insand
+ordUnits <-3>);
+
+hundreds1 = ((((("eitt".byte <2.0>) insspace) | delone)
+  ("".byte : ("hundraðasta".byte | "hundraðasti".byte)))
+  | (n.neutral_units2to9 insspace
+  ("".byte : ("hundraðasti".byte | "hundraðasta".byte | "hundruðustu".byte))));
+
+hundreds2 = ((((("eitt".byte <2.0>) insspace) | delone)
+  ("".byte : "hundrað".byte))
+  | (n.neutral_units2to9 insspace
+  ("".byte : "hundruð".byte)));
+
+ordinals_100_to_999 = Optimize[
+  hundreds1 delzero delzero delperiod |
+  (hundreds2 delzero insand ordUnits <-1>) |
+  (hundreds2 insand ordTeens <-2>) |
+  (hundreds2 (insspace | insand) ordinals_20_to_99 <-10>)]
+;
+
+ordinals = Optimize[
+  (ordUnits <-0.5>) |
+  (ordTeens <-1>) |
+  (ordinals_20_to_99 <-2>) |
+  (ordinals_100_to_999 <-10>)]
+;
+
+#export ORDINALNAMES = Optimize[ordinals @ n.add_and];
+export ORDINALNAMES = ordinals;
+
+# Avoid rewriting to 1., 2. and 10., since not always appropriate.
+# f.ex. "fyrstu tölur sýna", "hver annar gæti það verið?", "mig langar að tíunda þau hér"
+ordUnits3to9 = Optimize[StringFile['src/itn/lex/ordinals_units_3-9.txt',
+'byte', 'byte']];
+ord11_to_19 = Optimize[StringFile['src/itn/lex/ordinals_11-19.txt', 'byte', 'byte']];
+
+# export ORDINALNAMES_to_abbreviate = Optimize[
+#   (ordUnits3to9 <-0.5>) |
+#   (ord11_to_19 <-1>) |
+#   (ordinals_20_to_99 <-2>) |
+#   (ordinals_100_to_999 <-10>)]
+# ;
+
+# In most cases they want the first ten ordinals written out
+export ORDINALNAMES_to_abbreviate = Optimize[
+  (ord11_to_19 <-1>) |
+  (ordinals_20_to_99 <-2>) |
+  (ordinals_100_to_999 <-10>)]
+;

@@ -1,0 +1,32 @@
+amk	að minnsta kosti
+dr	doktor
+etv	ef til vill
+frh	framhald
+fyrrv	fyrrverandi
+heilbrrh	heilbrigðisráðherra
+iðnrh	iðnaðarráðherra
+innanrrh	innanríkisráðherra
+landbrh	landbúnaðarráðherra
+mas	meira að segja
+ma	meðal annars
+menntmrh	mennta og menningarmálaráðherra
+mkr	millj kr
+nk	næstkomandi
+nr	númer
+núv	núverandi
+osfrv	og svo framvegis
+oþh	og þess háttar
+pr	per
+samgrh	samgönguráðherra
+sbr	samanber
+skv	samkvæmt
+ss	svo sem
+stk	stykki
+tam	til að mynda
+td	til dæmis
+uþb	um það bil
+utanrrh	utanríkisráðherra
+viðskrh	viðskiptaráðherra
+þáv	þáverandi
+þús	þúsund
+þeas	það er að segja

@@ -26,6 +26,7 @@
 #include <utility>
 #include <vector>
 
+#include "src/aligned-word.h"
 #include "src/base.h"
 #include "src/kaldi-model.h"
 #include "src/options.h"
@@ -34,26 +35,6 @@
 namespace tiro_speech {
 
 using VectorBase = kaldi::VectorBase<float>;
-
-struct AlignedWord {
-  std::int64_t start_time;
-  std::int64_t duration;
-  std::string word_symbol;
-
-  AlignedWord(std::chrono::milliseconds start_time,
-              std::chrono::milliseconds duration, std::string word_symbol)
-      : start_time{start_time.count()},
-        duration{duration.count()},
-        word_symbol{word_symbol} {};
-
-  AlignedWord() : start_time{0}, duration{0}, word_symbol{""} {}
-
-  friend std::ostream& operator<<(std::ostream& os, const AlignedWord& ali) {
-    os << "WordAlignment{" << ali.word_symbol << ", " << ali.start_time << ", "
-       << ali.duration << "}";
-    return os;
-  }
-};
 
 class Recognizer final {
  public:

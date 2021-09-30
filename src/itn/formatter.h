@@ -18,12 +18,14 @@
 #include <fst/fstlib.h>
 
 #include <memory>
+#include <string>
+#include <utility>
 #include <vector>
 
+#include "src/aligned-word.h"
 #include "src/itn/converters.h"
 #include "src/logging.h"
 #include "src/options.h"
-#include "src/recognizer.h"
 
 namespace tiro_speech::itn {
 
@@ -53,6 +55,11 @@ class LookAheadFormatter {
 
   explicit LookAheadFormatter(const LookAheadFormatterConfig& opts);
 
+  LookAheadFormatter(std::unique_ptr<fst::StdILabelLookAheadFst> fst,
+                     LookAheadFormatter::LabelPairs relabel_pairs)
+      : relabel_pairs_{std::move(relabel_pairs)},
+        rewrite_fst_{std::move(fst)} {}
+
   /**
    * Format a vector of aligned words
    *
@@ -74,7 +81,68 @@ class LookAheadFormatter {
   std::unique_ptr<fst::StdILabelLookAheadFst> rewrite_fst_;
 };
 
+struct FormatterConfig {
+  std::string lexicon_fst_filename = "";
+  std::string rewrite_fst_filename = "";
+
+  void Register(OptionsItf* opts) {
+    opts->Register(
+        "lexicon-fst", &lexicon_fst_filename,
+        "Filename (possibly extended) of FST mapping from symbols to bytes");
+    opts->Register("rewrite-fst", &rewrite_fst_filename,
+                   "Filename (possibly extended) of rewriter FST. "
+                   "It must map from model.word_symbols to a string of bytes. "
+                   "model.word_symbols MUST contain a <space> symbol.");
+  }
+};
+
+/**
+ * Rewriting/formatting of FSAs using a look ahead FST.
+ */
+class Formatter {
+ public:
+  using Arc = fst::StdArc;
+  using InFst = fst::VectorFst<Arc>;
+  using OutFst = fst::VectorFst<Arc>;
+
+  explicit Formatter(const FormatterConfig& opts);
+
+  /**
+   * Format a vector of aligned words
+   *
+   * The symbol table \p isyms MUST be compatible with the rewrite FST and all
+   * elements of \p words MUST exist in \p isyms. The word symbols returned may
+   * or may not exist \p isyms but will be formatted according to the rules of
+   * the formatter. The time synchronization is preserved.
+   *
+   */
+  std::vector<AlignedWord> FormatWords(
+      const fst::SymbolTable& isyms,
+      const std::vector<AlignedWord>& words) const;
+
+ private:
+  std::unique_ptr<fst::StdFst> rewrite_fst_;
+  std::unique_ptr<fst::StdFst> lexicon_fst_;
+};
+
 void Capitalize(std::string& str);
+
+/**
+ * Create an FST that maps from a symbol in input_symbols to the bytes in that
+ * symbol. The output FST is olabel sorted.
+ */
+fst::VectorFst<fst::StdArc> CreateLexiconFst(
+    const fst::SymbolTable& input_symbols);
+
+/**
+ * Compose a lexicon and rewrite and convert it to a lookahead FST
+ *
+ * Either \p lexicon_fst has to be olabel sorted or \p rewrite_fst ilabel
+ * sorted.
+ */
+std::pair<fst::StdILabelLookAheadFst, LookAheadFormatter::LabelPairs>
+CreateLookaheadFormatterFst(const fst::StdFst& lexicon_fst,
+                            const fst::StdFst& rewrite_fst);
 
 }  // namespace tiro_speech::itn
 

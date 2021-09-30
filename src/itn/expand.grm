@@ -1,0 +1,204 @@
+# Grammar file to expand abbreviations, numbers and ordinals
+#
+# Copyright 2017  Reykjavik University (Author: Inga Rún Helgadóttir)
+# Apache 2.0
+#
+# This grammar can be interactively tested by doing:
+#
+# thraxrewrite-tester --far=src/itn/expand.far --rules=EXPAND_UTT --noutput=3 --input_mode --output_mode=byte
+
+import 'src/itn/common.grm' as c;
+import 'src/itn/numbers.grm' as n;
+import 'src/itn/ordinals.grm' as o;
+
+# This transducer inserts a space
+insspace = "" : " ";
+
+# map a sequence of one or more spaces to exactly one space:
+reduce_spaces = c.space+ : " ";
+
+# This deletes a sequence of zero or more spaces:
+delspace = c.space* : "";
+
+# Any word, expanded or not
+anyword = c.NotSpace+;
+
+##############
+#
+# First phase: Expansion of percentages, permilles, degrees and
+#              ",5" according to info from Alþingi. I assume that
+#              the text has been changed to lowercase already.
+#
+##############
+
+#perc = "%" : (("%" <15>) | " prósent" | " prósenti" |
+#" prósents" | " prósentum" | " prósenta" );
+
+per = Optimize[StringFile['src/itn/lex/percent_permille.txt', 'byte', 'byte']];
+# Expand according to context dependent rules. Default is an
+# obligatory rewrite
+expandper = CDRewrite[
+  per,
+  "",
+  "",
+  c.whole_alphabet*];
+
+# In the althingi data they write <num>,5 when people say "<num> and half"
+half05 = Optimize[StringFile['src/itn/lex/half05.txt', 'byte', 'byte']];
+half1 = Optimize[StringFile['src/itn/lex/half.txt', 'byte', 'byte']];
+
+rewrite_half05 = CDRewrite[
+  half05,
+  "",
+  (c.u8_punct | c.space | "[EOS]"),
+  c.whole_alphabet*];
+
+rewrite_half1 = CDRewrite[
+  (half1 | (",5" : (" komma fimm" <-1.0>))),
+  c.Digits+,
+  (c.u8_punct | c.space | "[EOS]"),
+  c.whole_alphabet*];
+
+# I change ½ to 0,5 in prep_althingi_data.sh so I don't have to worry
+#about that
+
+half = Optimize[rewrite_half05 @ rewrite_half1];
+#export half = rewrite_half05 | rewrite_half1 | half2;
+
+# Rewrite 2° and 2°c to 2 degrees. They usually don't say celsíus in Althingi
+deg = ("º"("c"|"C")? | "°"("c"|"C")?) : (" gráða" | " gráðu" |
+(" gráður" <-1.0>) | " gráðum");
+expanddeg = CDRewrite[
+  deg,
+  "",
+  (c.u8_punct | c.space | "[EOS]"),
+  c.whole_alphabet*];
+
+# The following rule composes 4 transducers, and optimizes the
+# result. Optimize performs various optimizations on the
+# transducer: removing epsilon arcs, summing arc weights,
+# determinizing and minimizing. The resulting transducers is in
+# general more compact and efficient. Especially in large
+# grammars, it is a good idea to optimize at least some of
+# the intermediate transducers. This can significantly speed
+# up compilation.
+rewrite = Optimize[expandper @ half @ expanddeg];
+
+
+################
+#
+# Second phase: Expand abbreviations and include transducers
+# that do the same for numbers. Make sentences containing
+# unchanged and expanded words.
+#
+################
+
+numbernames = n.NUMBERNAMES;
+ordinalnames = o.ORDINALNAMES;
+
+# Abbreviations used in Alþingi paired with their expansions
+abbr_lex = Optimize[StringFile['src/itn/lex/abbr_lexicon.txt',','byte']];
+
+# Optional expansion
+nal = "nál" : "nefndarálit";
+expandnal = CDRewrite[
+  nal,
+  ("[BOS]" | " "),
+  ("[EOS]" | " "),
+  c.whole_alphabet*,
+  'ltr',
+  'opt'];
+
+dags = "dags" : ("dagsett" | "dagsettu");
+expanddags = CDRewrite[
+  dags,
+  ("[BOS]" | " "),
+  ("[EOS]" | " "),
+  c.whole_alphabet*,
+  'ltr',
+  'opt'];
+
+form = "form" : "formaður";
+expandform = CDRewrite[
+  form,
+  ("[BOS]" | " "),
+  ("[EOS]" | " "),
+  c.whole_alphabet*,
+  'ltr',
+  'opt'];
+
+optional_exp = Optimize[expandnal @ expanddags @ expandform];
+
+# words that are expanded
+word = abbr_lex | numbernames | ordinalnames;
+
+export EXPAND_WORD = Optimize[
+                     CDRewrite[word delspace,
+                     ("[BOS]" | " "),
+                     ("[EOS]" | " "),
+                     c.whole_alphabet*,
+                     'ltr',
+                     'obl']];
+
+# After expanding 20., 30., ... and 100., 200., ... I still have
+# a period inside the sentence. F.ex. "tuttugasta. skipti".
+# I fix that here plus remove the period left behind if a
+# sentence ended with an abbreviation.
+remove_period = CDRewrite[
+  "." : "",
+  c.alphabet+,
+  (c.u8_punct | " " | "[EOS]"),
+  c.whole_alphabet*];
+
+# This is the main output of this grammar. A WFST that expands
+# abbreviations and numbers, while also cleaning the text
+export EXPAND_UTT = ArcSort[Optimize[
+    rewrite @ optional_exp @ EXPAND_WORD @ remove_period], 'input'];
+
+##########
+#
+# The following is used to filter out the Leipzig corpora to make a
+# reasonably sized language model that works well for expanding
+# abbreviations and numbers.
+# Take expanded words and numbers and abbreviate them. Enables us
+# to use only the sentences in the corpus that contain expanded
+# numbers and abbreviations.
+# I don't have to worry about punctuations in the following because
+# will have taken them out from the Leipzig data beforehand
+#
+##########
+
+perc_perm_rev = Invert[per];
+half_rev = Invert[half];
+deg_rev = Invert[deg];
+abbr_word = Invert[word];
+
+# This fst only rewrites sentences which include at least
+# one rewritable words. But it abbreviates word parts that
+# shouldn't be abbreviated
+# It can not be used to get out sensible text, just to identify
+# expanded numbers and abbreviations
+export ABBREVIATE_forExpansion = ArcSort[Optimize[
+                      delspace
+                      (anyword reduce_spaces)*
+                      (abbr_word half_rev? perc_perm_rev? deg_rev?
+                      delspace? insspace
+                      (anyword reduce_spaces)*)+
+                      anyword?
+                      delspace],
+                      'input'];
+
+# # This abbreviates at least one rewritable word or number, per
+# # senctence. But doesn't take in senctences containing numerals
+# # and/or abbreviations (written as f.ex. 2, 4, t.d., hv.)
+# # So we would loose utterances
+# #export exp_tmp = Optimize[rewrite @ optional_exp @ EXPAND_WORD ];
+# #export tmp = Invert[rewrite @ optional_exp @ word];
+# export ABBR_OPT = Optimize[
+#                      CDRewrite[abbr_word delspace,
+#                      ("[BOS]" | " "),
+#                      ("[EOS]" | " "),
+#                      c.whole_alphabet*,
+#                      'ltr',
+#                      'opt']]; # If have 'obl' instead, all "annars
+#                      # vegar" and "dag einn..." will be abbreviated

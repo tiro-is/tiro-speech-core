@@ -1,5 +1,6 @@
 load("@com_github_bazelbuild_buildtools//buildifier:def.bzl", "buildifier")
 load("@io_bazel_rules_docker//cc:image.bzl", "cc_image")
+load("//tools/thrax:defs.bzl", "compile_grm")
 
 licenses(["notice"])  # Apache 2.0
 
@@ -11,9 +12,56 @@ buildifier(
     name = "buildifier",
 )
 
-COMMON_COPTS = [
-    "-std=c++17",
-]
+COMMON_COPTS = []
+
+# TODO(rkjaran): Fix compile_grm/grm_library to support proper deps, so we don't
+#     always recompile everthing and can use transitive deps
+itn_grammars = glob(["src/itn/*.grm"])
+itn_maps = glob(["src/itn/lex/*.txt"])
+itn_common_data = itn_grammars + itn_maps
+
+compile_grm(
+    name = "byte",
+    src = "src/itn/byte.grm",
+)
+
+compile_grm(
+    name = "common",
+    src = "src/itn/common.grm",
+    data = ["src/itn/byte.grm"] + [
+        ":byte",
+    ],
+)
+
+compile_grm(
+    name = "numbers",
+    src = "src/itn/numbers.grm",
+    data = itn_common_data + [
+        ":byte",
+        ":common",
+    ],
+)
+
+compile_grm(
+    name = "ordinals",
+    src = "src/itn/ordinals.grm",
+    data = itn_common_data + [
+        ":byte",
+        ":common",
+        ":numbers",
+    ],
+)
+
+compile_grm(
+    name = "abbreviate",
+    src = "src/itn/abbreviate.grm",
+    data = [
+        ":byte",
+        ":common",
+        ":numbers",
+        ":ordinals",
+    ] + itn_common_data,
+)
 
 cc_library(
     name = "tiro_speech",
@@ -45,6 +93,17 @@ cc_library(
         "@pytorch//:torch_cpu",
         "@icu//:common",
         "@moodycamel_readerwriterqueue",
+        "@org_opengrm_thrax//:thrax",
+    ],
+)
+
+cc_binary(
+    name = "prepare_lexicon_fst",
+    srcs = [
+        "src/bin/prepare_lexicon_fst_main.cc",
+    ],
+    deps = [
+        ":tiro_speech",
     ],
 )
 
@@ -83,7 +142,7 @@ cc_binary(
 
 cc_image(
     name = "tiro_speech_client_image",
-    base = "@ubuntu_focal_x86_64//image",
+    base = "@ubuntu_groovy_x86_64//image",
     binary = ":tiro_speech_client",
     visibility = ["//visibility:public"],
 )

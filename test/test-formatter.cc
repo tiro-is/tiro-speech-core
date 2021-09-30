@@ -157,3 +157,38 @@ TEST_CASE("Formatting using a Timing FST works", "[fst][itn]") {
             expected_alis_output[idx].start_time);
   }
 }
+
+TEST_CASE("LookAheadFormatter can format a weird vector of AlignedWords",
+          "[fst][itn]") {
+  using namespace tiro_speech;
+  using namespace tiro_speech::itn;
+  const std::filesystem::path model_path{"test/test_model"};
+
+  std::unique_ptr<fst::SymbolTable> isyms{fst::SymbolTable::ReadText(
+      model_path / "graph" / "words.txt", fst::SymbolTableTextOptions{})};
+  REQUIRE(isyms->Find("<space>") != fst::kNoLabel);
+
+  LookAheadFormatter formatter{
+      {.relabel_pairs_filename = model_path / "relabel.pairs",
+       .fst_filename = model_path / "rewrite_from_syms_lookahead.fst"}};
+
+  const std::vector<AlignedWord> expected_alis_output{
+      {0ms, 112ms, ",/er"}, {120ms, 690ms, "01.12.11:\n"}};
+  const std::vector<AlignedWord> word_alis{
+      {0ms, 50ms, "<k>"},     {60ms, 5ms, "<sk>"},   {102ms, 10ms, "er"},
+      {120ms, 10ms, "0"},     {240ms, 120ms, "1"},   {410ms, 50ms, "12"},
+      {520ms, 150ms, "2011"}, {700ms, 50ms, "<pp>"}, {751ms, 35ms, "<nl>"},
+      {800ms, 10ms, "<hy>"}};
+
+  auto formatted_word_alis = formatter.FormatWords(*isyms, word_alis);
+
+  for (std::size_t idx = 0; idx < formatted_word_alis.size(); ++idx) {
+    CAPTURE(formatted_word_alis[idx]);
+    REQUIRE(formatted_word_alis[idx].word_symbol ==
+            expected_alis_output[idx].word_symbol);
+    REQUIRE(formatted_word_alis[idx].duration ==
+            expected_alis_output[idx].duration);
+    REQUIRE(formatted_word_alis[idx].start_time ==
+            expected_alis_output[idx].start_time);
+  }
+}

@@ -1,0 +1,133 @@
+h t t p s	https
+a d h d	ADHD
+a d s l	ADSL
+á t v r	ÁTVR
+b r r d	BRRD
+b s r b	BSRB
+e c t s	ECTS
+h t t p	http
+i s d s	ISDS
+k f u k	KFUK
+k f u m	KFUM
+l g b t	LGBT
+o e c d	OECD
+p m t o	PMTO
+r i k b	RIKB
+r i k h	RIKH
+u m f a	UMFA
+u m f g	UMFG
+u m f í	UMFÍ
+u m f n	UMFN
+u m f s	UMFS
+u m s k	UMSK
+u m s s	UMSS
+þ s s í	ÞSSÍ
+a a a	AAA
+a g s	AGS
+a p t	APT
+a s í	ASÍ
+b b c	BBC
+b h m	BHM
+b s í	BSÍ
+c c p	CCP
+c f c	CFC
+d n a	DNA
+d r g	DRG
+e b e	EBE
+e e s	EES
+e h f	ehf
+e j s	EJS
+e r m	ERM
+e s b	ESB
+e s í	ESÍ
+e t s	ETS
+f í h	FÍH
+f k a	FKA
+f m e	FME
+g p s	GPS
+h h í	HHÍ
+h i v	HIV
+h p v	HPV
+h s í	HSÍ
+h s s	HSS
+i b m	IBM
+í b v	ÍBV
+i f s	IFS
+i m f	IMF
+í s í	ÍSÍ
+í s t	ÍST
+í t r	ÍTR
+k f c	KFC
+k g b	KGB
+k h í	KHÍ
+k k í	KKÍ
+k m í	KMÍ
+k s í	KSÍ
+l í ú	LÍÚ
+l s h	LSH
+l s r	LSR
+l s s	LSS
+m b a	MBA
+m b l	mbl
+m f s	MFS
+m h í	MHÍ
+m m r	MMR
+m n d	MND
+m p a	MPA
+m s t	MST
+n b a	NBA
+n f s	NFS
+n p a	NPA
+n s a	NSA
+o h f	ohf
+o t c	OTC
+p s a	PSA
+r k í	RKÍ
+s á á	SÁÁ
+s d r	SDR
+s f r	SFR
+s í k	SÍK
+s m m	SMM
+s m s	SMS
+s r ú	SRÚ
+s s h	SSH
+t h c	THC
+v l f	VLF
+v m a	VMA
+v í b	VÍB
+v s ó	VSÓ
+v t o	VTO
+w t o	WTO
+w w w	www
+ö b í	ÖBÍ
+a a	AA
+b a	BA
+b s	BS
+c e	CE
+d v	DV
+e b	EB
+h b	HB
+h f	hf
+h í	HÍ
+h m	HM
+h s	HS
+i p	IP
+k b	KB
+k í	KÍ
+l h	LH
+l s	LS
+m h	MH
+m p	MP
+m r	MR
+m s	MS
+s a	SA
+s f	SF
+s í	SÍ
+s p	SP
+t f	TF
+t h	Th
+t r	TR
+v g	VG
+v r	VR
+v s	VS
+ú a	ÚA

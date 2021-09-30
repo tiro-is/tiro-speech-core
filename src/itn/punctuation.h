@@ -49,7 +49,7 @@ class ElectraPunctuator {
         sep_token_id_{opts.sep_token_id} {}
 
   /**
-   * Automatically predict and add punctuation to then ends of words.
+   * Automatically predict and add punctuation to the ends of words.
    *
    * @note This can't be const since jit::Module::forward isn't. But it is
    *       probably thread-safe for the models we're using.

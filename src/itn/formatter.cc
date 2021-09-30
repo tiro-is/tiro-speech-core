@@ -13,7 +13,14 @@
 // limitations under the License.
 #include "src/itn/formatter.h"
 
+#include <thrax/algo/cross.h>
+#include <thrax/algo/stringcompile.h>
+#include <thrax/algo/stringmap.h>
 #include <unicode/unistr.h>
+
+#include <algorithm>
+
+#include "src/logging.h"
 
 namespace tiro_speech::itn {
 
@@ -35,6 +42,19 @@ void Format(LookAheadFormatter::InFst ifst,
   fst::Relabel(&ifst, {}, relabel_pairs);
   fst::ArcSort(&ifst, fst::OLabelCompare<LookAheadFormatter::Arc>{});
   fst::Compose(ifst, rewrite_fst, ofst);
+}
+
+template <typename Arc>
+void Optimize(fst::MutableFst<Arc>* ifst) {
+  fst::RmEpsilon(ifst);
+  fst::EncodeMapper<fst::StdArc> mapper{fst::kEncodeLabels |
+                                        fst::kEncodeWeights};
+  fst::Encode(ifst, &mapper);
+  fst::VectorFst<fst::StdArc> fst_det;
+  fst::Determinize(*ifst, &fst_det);
+  fst::Minimize(&fst_det);
+  fst::Decode(&fst_det, mapper);
+  *ifst = std::move(fst_det);
 }
 
 }  // namespace
@@ -70,11 +90,112 @@ std::vector<AlignedWord> LookAheadFormatter::FormatWords(
   return Convert(timing_byte_fst);
 }
 
+Formatter::Formatter(const FormatterConfig& opts) {
+  rewrite_fst_.reset(fst::StdFst::Read(opts.rewrite_fst_filename));
+  if (rewrite_fst_ == nullptr) {
+    throw std::runtime_error{
+        fmt::format("Could not read rewrite FST from file '{}'",
+                    opts.rewrite_fst_filename)};
+  }
+
+  lexicon_fst_.reset(fst::StdFst::Read(opts.lexicon_fst_filename));
+  if (rewrite_fst_ == nullptr) {
+    throw std::runtime_error{
+        fmt::format("Could not read lexicon FST from file '{}'",
+                    opts.lexicon_fst_filename)};
+  }
+}
+
+std::vector<AlignedWord> Formatter::FormatWords(
+    const fst::SymbolTable& isyms,
+    const std::vector<AlignedWord>& words) const {
+  fst::VectorFst<Arc> words_fst = ConvertToTropical(words, isyms);
+
+  fst::VectorFst<Arc> words_byte_fst;
+  fst::Compose(words_fst, *lexicon_fst_, &words_byte_fst);
+
+  fst::ArcSort(&words_byte_fst, fst::OLabelCompare<Arc>{});
+  fst::VectorFst<Arc> formatted_candidates_fst{};
+  fst::Compose(words_byte_fst, *rewrite_fst_, &formatted_candidates_fst);
+
+  fst::VectorFst<Arc> formatted_words_fst;
+  fst::ShortestPath(formatted_candidates_fst, &formatted_words_fst);
+
+  fst::TimingFst formatted_time_fst{};
+  fst::ArcMap(formatted_words_fst, &formatted_time_fst,
+              fst::WeightConvertMapper<Arc, fst::TimingArc>{});
+
+  fst::TimingFst timing_symbol_fst = Convert(words, isyms);
+  fst::TimingFst timing_byte_fst{};
+  fst::Compose(timing_symbol_fst, formatted_time_fst, &timing_byte_fst);
+
+  return Convert(timing_byte_fst);
+}
+
 void Capitalize(std::string& str) {
   auto upiece = icu::UnicodeString::fromUTF8(str);
   upiece.replace(0, 1, upiece.tempSubString(0, 1).toUpper());
   str.clear();
   upiece.toUTF8String(str);
+}
+
+fst::VectorFst<fst::StdArc> CreateLexiconFst(
+    const fst::SymbolTable& input_symbols) {
+  // TODO(rkjaran): Make this configurable
+  constexpr std::array filter{"<eps>", "<s>", "</s>", "#0", "<space>"};
+
+  fst::VectorFst<fst::StdArc> lexicon_fst;
+
+  std::vector<std::vector<std::string>> string_map;
+  for (auto const& entry : input_symbols) {
+    // if entry not in forbidded
+    const auto symbol_str = entry.Symbol();
+    if (std::any_of(
+            filter.cbegin(), filter.cend(),
+            [&](const auto& filter_sym) { return symbol_str == filter_sym; })) {
+      continue;
+    }
+    string_map.push_back({symbol_str, symbol_str});
+  }
+
+  if (!fst::StringMapCompile(string_map, &lexicon_fst, fst::TokenType::SYMBOL,
+                             fst::TokenType::BYTE, &input_symbols)) {
+    TIRO_SPEECH_FATAL("Could not compile string map");
+  }
+
+  fst::VectorFst<fst::StdArc> space_fst;
+  std::vector<std::vector<std::string>> space_map{{"<space>", " "}};
+  if (!fst::StringMapCompile(space_map, &space_fst, fst::TokenType::SYMBOL,
+                             fst::TokenType::BYTE, &input_symbols)) {
+    TIRO_SPEECH_FATAL("Could not compile space string map");
+  }
+
+  // This is an artifact we'll have to live with... ending every word with a
+  // space, even the last one
+  fst::Concat(&lexicon_fst, space_fst);
+  fst::Closure(&lexicon_fst, fst::ClosureType::CLOSURE_PLUS);
+
+  Optimize(&lexicon_fst);
+  fst::ArcSort(&lexicon_fst, fst::ILabelCompare<fst::StdArc>());
+
+  return lexicon_fst;
+}
+
+std::pair<fst::StdILabelLookAheadFst, LookAheadFormatter::LabelPairs>
+CreateLookaheadFormatterFst(const fst::StdFst& lexicon_fst,
+                            const fst::StdFst& rewrite_fst) {
+  TIRO_SPEECH_DEBUG("Composing lexicon and rewrite FST");
+  fst::VectorFst<fst::StdArc> rewrite_from_syms_fst;
+  fst::Compose(lexicon_fst, rewrite_fst, &rewrite_from_syms_fst);
+
+  TIRO_SPEECH_DEBUG("Converting to lookahead");
+  fst::StdILabelLookAheadFst lookahead_fst(rewrite_from_syms_fst);
+
+  LookAheadFormatter::LabelPairs relabel_pairs;
+  fst::LabelLookAheadRelabeler<fst::StdArc>::RelabelPairs(lookahead_fst,
+                                                          &relabel_pairs);
+
+  return {lookahead_fst, relabel_pairs};
 }
 
 }  // namespace tiro_speech::itn

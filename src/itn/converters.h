@@ -19,8 +19,8 @@
 #include <string>
 #include <vector>
 
+#include "src/aligned-word.h"
 #include "src/itn/timing-weight.h"
-#include "src/recognizer.h"  // for AlignedWord
 
 namespace tiro_speech::itn {
 

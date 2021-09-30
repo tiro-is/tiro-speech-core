@@ -31,6 +31,7 @@
 #include "google/rpc/error_details.pb.h"
 #include "google/rpc/status.pb.h"
 #include "proto/tiro/speech/v1alpha/speech.grpc.pb.h"
+#include "src/aligned-word.h"
 #include "src/api/utils.h"
 #include "src/api/validation.h"
 #include "src/audio/audio-source.h"

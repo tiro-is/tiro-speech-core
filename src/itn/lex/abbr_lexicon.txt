@@ -1,0 +1,225 @@
+amk	að minnsta kosti
+árg	árgangi
+árg	árgangur
+bls	blaðsíða
+bls	blaðsíðu
+bls	blaðsíðum
+bls	blaðsíður
+cm²	fersentímetra
+cm²	fersentímetrar
+cm²	fersentímetrum
+cm³	rúmsentímetra
+cm³	rúmsentímetrar
+cm³	rúmsentímetrum
+cm	sentímetra
+cm	sentímetrar
+cm	sentímetrum
+dkr	danskar krónur
+dr	doktor
+efnismgr	efnismálsgrein
+efnismgr	efnismálsgreinar
+etv	ef til vill
+flm	flutningsmaður
+flm	flutningsmann
+flm	flutningsmanni
+flm	flutningsmanns
+flm	flutningsmenn
+flm	flutningsmönnum
+frh	framhald
+frsm	framsögumaður
+frsm	framsögumenn
+frv	frumvarp
+frv	frumvarpi
+frv	frumvarpinu
+frv	frumvarps
+frv	frumvarpsins
+fskj	fylgiskjal
+fskj	fylgiskjali
+fyrrv	fyrrverandi
+gr	grein
+gr	greinar
+gW	gígavatt
+gW	gígavatta
+gW	gígavatti
+gW	gígavött
+gW	gígavöttum
+gwst	gígavattstund
+gwst	gígavattstunda
+gwst	gígavattstundir
+gwst	gígavattstundum
+hæstv	hæstvirt
+hæstv	hæstvirta
+hæstv	hæstvirtan
+hæstv	hæstvirti
+hæstv	hæstvirtir
+hæstv	hæstvirtra
+hæstv	hæstvirtrar
+hæstv	hæstvirtri
+hæstv	hæstvirts
+hæstv	hæstvirtu
+hæstv	hæstvirtum
+hæstv	hæstvirtur
+hrl	hæstaréttarlögmaður
+hrl	hæstaréttarlögmann
+hrl	hæstaréttarlögmanni
+hrl	hæstaréttarlögmanns
+hv	háttvirt
+hv	háttvirta
+hv	háttvirtan
+hv	háttvirti
+hv	háttvirtir
+hv	háttvirtra
+hv	háttvirtrar
+hv	háttvirtri
+hv	háttvirts
+hv	háttvirtu
+hv	háttvirtum
+hv	háttvirtur
+ísl	íslenskar
+ísl	íslenskum
+kg	kílógramm
+kg	kílógramma
+kg	kílógrammi
+kg	kílógrömm
+kg	kílógrömmum
+kl	klukkan
+klst	klukkustund
+klst	klukkustunda
+klst	klukkustundir
+klst	klukkustundum
+km²	ferkílómetra
+km²	ferkílómetrar
+km²	ferkílómetrum
+km	kílómetra
+km	kílómetrar
+km	kílómetri
+km	kílómetrum
+kr	króna
+kr	krónu
+kr	krónum
+kr	krónur
+kW	kílóvatt
+kW	kílóvatta
+kW	kílóvatti
+kW	kílóvött
+kW	kílóvöttum
+kwst	kílóvattstund
+kwst	kílóvattstunda
+kwst	kílóvattstundir
+kwst	kílóvattstundum
+lokamálsgr	lokamálsgrein
+lokamálsgr	lokamálsgreinar
+m²	fermetra
+m²	fermetrar
+m³	rúmmetra
+m³	rúmmetrar
+ma	meðal annars
+mas	meira að segja
+málsgr	málsgrein
+málsgr	málsgreinar
+málsl	málslið
+málsl	málsliður
+mgr	málsgrein
+mgr	málsgreinar
+millj kr	milljón króna
+millj kr	milljónar króna
+millj kr	milljóna króna
+millj kr	milljónir króna
+millj kr	milljónum króna
+mW	megavatt
+mW	megavatta
+mW	megavatti
+mW	megavött
+mW	megavöttum
+mwst	megavattstund
+mwst	megavattstunda
+mwst	megavattstundir
+mwst	megavattstundum
+möo	með öðrum orðum
+nk	næstkomandi
+nkr	norskar krónur
+Norðaust	Norðausturkjördæmi
+Norðaust	Norðausturkjördæmis
+Norðvest	Norðvesturkjördæmi
+Norðvest	Norðvesturkjördæmis
+nr	númer
+núv	núverandi
+ofl	og fleira
+ofl	og fleiri
+osfrv	og svo framvegis
+oþh	og þess háttar
+pr	per
+Reykv n	Reykjavíkurkjördæmi norður
+Reykv n	Reykjavíkurkjördæmis norður
+Reykv s	Reykjavíkurkjördæmis suður
+Reykv s	Reykjavíkurkjördæmi suður
+sbr	samanber
+skr	sænskar krónur
+skv	samkvæmt
+sl	síðastliðið
+sl	síðastliðinn
+sl	síðastliðnum
+ss	svo sem
+stk	stykki
+stjfrv	stjórnarfrumvarp
+stjtill	stjórnartillaga
+stjtill	stjórnartillögu
+Suðurk	Suðurkjördæmi
+Suðurk	Suðurkjördæmis
+Suðvest	Suðvesturkjördæmi
+Suðvest	Suðvesturkjördæmis
+SÞ	Sameinuðu þjóðanna
+SÞ	Sameinuðu þjóðirnar
+SÞ	Sameinuðu þjóðunum
+tam	til að mynda
+td	til dæmis
+tbl	tölublað
+tbl	tölublaðs
+tölul	tölulið
+tölul	töluliðar
+tölul	töluliður
+tW	teravatt
+tW	teravatta
+tW	teravatti
+tW	teravött
+tW	teravöttum
+twh	teravattstund
+twh	teravattstunda
+twh	teravattstundir
+twh	teravattstundum
+twst	teravattstund
+twst	teravattstunda
+twst	teravattstundir
+twst	teravattstundum
+umr	umræða
+umr	umræðu
+uþb	um það bil
+varaform	varaformaður
+vlf	verg landsframleiðsla
+vlf	verga landsframleiðslu
+vlf	vergrar landsframleiðslu
+vlf	vergri landsframleiðslu
+wst	vattstund
+wst	vattstunda
+wst	vattstundir
+wst	vattstundum
+þáltill	þingsályktunartillaga
+þáltill	þingsályktunartillögu
+þáv	þáverandi
+þe	það er
+þe	það er að segja
+þeas	það er að segja
+þmt	þar með talið
+þmt	þar með talin
+þmt	þar með talinn
+þm	þingmaður
+þm	þingmann
+þm	þingmanna
+þm	þingmanni
+þm	þingmanns
+þm	þingmenn
+þm	þingmönnum
+þskj	þingskjal
+þskj	þingskjali
+þskj	þingskjölum
+þús	þúsund

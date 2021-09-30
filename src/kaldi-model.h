@@ -25,6 +25,7 @@
 #include <string_view>
 #include <unordered_map>
 
+#include "src/itn/formatter.h"
 #include "src/itn/punctuation.h"
 #include "src/options.h"
 
@@ -52,6 +53,8 @@ struct KaldiModelConfig {
 
   itn::ElectraPunctuatorConfig punctuator_config;
 
+  itn::FormatterConfig formatter_config;
+
   void Register(OptionsItf* opts) {
     opts->Register("nnet3-rxfilename", &nnet3_rxfilename,
                    "Filename (possibly extended) of nnet3 acoustic model");
@@ -78,13 +81,16 @@ struct KaldiModelConfig {
     decoder_config.Register(opts);
     decodable_config.Register(opts);
 
-    kaldi::ParseOptions word_boundary_opts{"word-boundary", opts};
+    ParseOptions word_boundary_opts{"word-boundary", opts};
     word_boundary_config.Register(&word_boundary_opts);
     opts->Register("word-boundary-int-rxfilename", &word_boundary_rxfilename,
                    "Word boundary file, necessary for word alignment.");
 
-    kaldi::ParseOptions punctuator_opts{"punctuator", opts};
+    ParseOptions punctuator_opts{"punctuator", opts};
     punctuator_config.Register(&punctuator_opts);
+
+    ParseOptions formatter_opts{"formatter", opts};
+    formatter_config.Register(&formatter_opts);
   }
 
   void Check() const;
@@ -131,6 +137,7 @@ struct KaldiModel {
   const KaldiModelConfig config;
 
   std::shared_ptr<itn::ElectraPunctuator> punctuator;
+  std::shared_ptr<itn::Formatter> formatter;
 };
 
 std::shared_ptr<KaldiModel> CreateKaldiModel(const std::string_view model_path);
