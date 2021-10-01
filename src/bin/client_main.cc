@@ -229,6 +229,7 @@ int templated_main(ProgramOptions& opts) {
   config.set_sample_rate_hertz(16000);
   config.set_language_code("is-IS");
   config.set_enable_automatic_punctuation(opts.punctuation);
+  config.mutable_diarization_config()->set_enable_speaker_diarization(true);
 
   if (!recognition_config_filename.empty()) {
     const std::string content = GetFileContents(recognition_config_filename);

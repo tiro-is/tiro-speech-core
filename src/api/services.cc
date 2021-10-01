@@ -38,6 +38,7 @@
 #include "src/audio/audio.h"
 #include "src/audio/ffmpeg-wrapper.h"
 #include "src/base.h"
+#include "src/diarization.h"
 #include "src/logging.h"
 #include "src/recognizer.h"
 #include "src/utils.h"
@@ -90,6 +91,40 @@ tiro_speech::AudioEncoding Convert(
 
 namespace tiro_speech {
 
+namespace {
+
+void TagSpeaker(
+    const XvectorDiarizationDecoderInfo& info,
+    const std::vector<DiarizationSegment>& diarization_decisions,
+    tiro::speech::v1alpha::SpeechRecognitionAlternative* alternative) {
+  if (diarization_decisions.empty()) {
+    return;
+  }
+  auto dia_frames_to_milli = [&](std::int32_t frames) {
+    return frames * info.opts.mfcc_opts.frame_opts.frame_shift_ms;
+  };
+
+  for (tiro::speech::v1alpha::WordInfo& word : *alternative->mutable_words()) {
+    std::int32_t start_time = word.start_time().seconds() * 1000 +
+                              word.start_time().nanos() / 1000000;
+    std::int32_t end_time =
+        word.end_time().seconds() * 1000 + word.end_time().nanos() / 1000000;
+
+    for (std::size_t seen = 0; seen < diarization_decisions.size(); seen++) {
+      std::int32_t start_frame_milli =
+          dia_frames_to_milli(diarization_decisions[seen].start_frame);
+      std::int32_t end_frame_milli =
+          dia_frames_to_milli(diarization_decisions[seen].end_frame);
+      if (start_time >= start_frame_milli && start_time < end_frame_milli) {
+        word.set_speaker_tag(diarization_decisions[seen].spk_id);
+        break;
+      }
+    }
+  }
+}
+
+}  // namespace
+
 grpc::Status SpeechService::Recognize(grpc::ServerContext* context,
                                       const RecognizeRequest* request,
                                       RecognizeResponse* response) {
@@ -127,12 +162,33 @@ grpc::Status SpeechService::Recognize(grpc::ServerContext* context,
         throw std::logic_error{""};
     }
 
-    audio_src->Open();
+    // Left empty if diarization not enabled
+    std::vector<DiarizationSegment> diarization_decisions;
 
-    while (audio_src->HasMoreChunks()) {
-      auto chunk = audio_src->NextChunk();
-      if (chunk.Dim() > 0) {
-        utt_recognizer.Decode(chunk, /* flush */ !audio_src->HasMoreChunks());
+    audio_src->Open();
+    if (model->diarization_info != nullptr &&
+        request->config().diarization_config().enable_speaker_diarization()) {
+      // This is a bit little ugly
+      XvectorDiarizationDecoder diarizer{*model->diarization_info};
+      while (audio_src->HasMoreChunks()) {
+        auto chunk = audio_src->NextChunk();
+        if (chunk.Dim() > 0) {
+          utt_recognizer.Decode(chunk, /* flush */ !audio_src->HasMoreChunks());
+          diarizer.AcceptWaveform(request->config().sample_rate_hertz(), chunk);
+        }
+      }
+      diarizer.InputFinished();
+      std::int32_t speaker_count =
+          request->config().diarization_config().min_speaker_count() > 2
+              ? request->config().diarization_config().min_speaker_count()
+              : 2;
+      diarization_decisions = diarizer.Compute(speaker_count);
+    } else {
+      while (audio_src->HasMoreChunks()) {
+        auto chunk = audio_src->NextChunk();
+        if (chunk.Dim() > 0) {
+          utt_recognizer.Decode(chunk, /* flush */ !audio_src->HasMoreChunks());
+        }
       }
     }
     utt_recognizer.Finalize();
@@ -168,7 +224,12 @@ grpc::Status SpeechService::Recognize(grpc::ServerContext* context,
       SpeechRecognitionAlternative* first_alternative = res->add_alternatives();
       for (const auto& ali : first_alignments) {
         first_alternative->set_transcript(transcripts[0]);
-        Convert(ali, first_alternative->add_words());
+        auto* word = first_alternative->add_words();
+        Convert(ali, word);
+      }
+      if (model->diarization_info != nullptr) {
+        TagSpeaker(*model->diarization_info, diarization_decisions,
+                   first_alternative);
       }
     }
 
