@@ -184,6 +184,29 @@ message RecognitionConfig {
   bool enable_automatic_punctuation = 11;
 
   reserved 7, 12;
+
+  SpeakerDiarizationConfig diarization_config = 19;
+}
+
+// Config to enable speaker diarization.
+message SpeakerDiarizationConfig {
+  // If 'true', enables speaker detection for each recognized word in
+  // the top alternative of the recognition result using a speaker_tag provided
+  // in the WordInfo.
+  bool enable_speaker_diarization = 1;
+
+  // Minimum number of speakers in the conversation. This range gives you more
+  // flexibility by allowing the system to automatically determine the correct
+  // number of speakers. If not set, the default value is 2.
+  int32 min_speaker_count = 2;
+
+  // Maximum number of speakers in the conversation. This range gives you more
+  // flexibility by allowing the system to automatically determine the correct
+  // number of speakers. If not set, the default value is 6.
+  int32 max_speaker_count = 3;
+
+  reserved "speaker_tag";
+  reserved 5;
 }
 
 // Description of audio data to be recognized.
@@ -504,5 +527,11 @@ message WordInfo {
   // The default of 0.0 is a sentinel value indicating `confidence` was not set.
   float confidence = 4;
 
-  reserved 5;
+  // A distinct integer value is assigned for every speaker within
+  // the audio. This field specifies which one of those speakers was detected to
+  // have spoken this word. Value ranges from '1' to diarization_speaker_count.
+  // speaker_tag is set if enable_speaker_diarization = 'true' and only in the
+  // top alternative.
+  int32 speaker_tag = 5
+    [(google.api.field_behavior) = OUTPUT_ONLY];
 }

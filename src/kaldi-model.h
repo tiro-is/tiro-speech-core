@@ -25,6 +25,7 @@
 #include <string_view>
 #include <unordered_map>
 
+#include "src/diarization.h"
 #include "src/itn/formatter.h"
 #include "src/itn/punctuation.h"
 #include "src/options.h"
@@ -54,6 +55,9 @@ struct KaldiModelConfig {
   itn::ElectraPunctuatorConfig punctuator_config;
 
   itn::FormatterConfig formatter_config;
+
+  bool diarization_enabled = false;
+  XvectorDiarizationDecoderOptions xvector_diarization_config;
 
   void Register(OptionsItf* opts) {
     opts->Register("nnet3-rxfilename", &nnet3_rxfilename,
@@ -91,6 +95,12 @@ struct KaldiModelConfig {
 
     ParseOptions formatter_opts{"formatter", opts};
     formatter_config.Register(&formatter_opts);
+
+    opts->Register("diarization-enabled", &diarization_enabled,
+                   "Enable diarization support. Requires model files and "
+                   "proper configs under 'diarization'.");
+    ParseOptions xvector_diarization_opts{"diarization", opts};
+    xvector_diarization_config.Register(&xvector_diarization_opts);
   }
 
   void Check() const;
@@ -138,6 +148,7 @@ struct KaldiModel {
 
   std::shared_ptr<itn::ElectraPunctuator> punctuator;
   std::shared_ptr<itn::Formatter> formatter;
+  std::shared_ptr<XvectorDiarizationDecoderInfo> diarization_info;
 };
 
 std::shared_ptr<KaldiModel> CreateKaldiModel(const std::string_view model_path);

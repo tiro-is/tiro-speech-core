@@ -52,6 +52,18 @@ void KaldiModelConfig::Check() const {
     TIRO_SPEECH_ERROR(
         "Both formatter.lexicon-fst AND formatter.rewrite-fst have to be set");
   }
+  if (diarization_enabled &&
+      (xvector_diarization_config.plda_filename.empty() ||
+       xvector_diarization_config.whitening_matrix_filename.empty() ||
+       xvector_diarization_config.centering_vector_filename.empty() ||
+       xvector_diarization_config.xvector_nnet_opts.nnet_rxfilename.empty())) {
+    error_occured = true;
+    TIRO_SPEECH_ERROR(
+        "Flag diarization_enabled set but missing one of "
+        "diarization.plda_filename, diarization.centering_vector_filename, "
+        "diarization.whitening_matrix_filename and "
+        "diarization.nnet_rxfilename");
+  }
 
   if (error_occured) {
     TIRO_SPEECH_FATAL("Got invalid configuration for KaldiModel.");
@@ -107,6 +119,11 @@ KaldiModel::KaldiModel(const KaldiModelConfig& config)
   if (!config.formatter_config.lexicon_fst_filename.empty() &&
       !config.formatter_config.rewrite_fst_filename.empty()) {
     formatter = std::make_shared<itn::Formatter>(config.formatter_config);
+  }
+
+  if (config.diarization_enabled) {
+    diarization_info = std::make_shared<XvectorDiarizationDecoderInfo>(
+        config.xvector_diarization_config);
   }
 }
 
