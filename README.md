@@ -64,7 +64,7 @@ No. The service is available at `speech.tiro.is:443`.
 
     bazel run -c opt //:tiro_speech_client -- --use-ssl $PWD/examples/is_is-mbl_01-2011-12-02T14:22:29.744483.wav $PWD/examples/config.pbtxt speech.tiro.is:443
 
-## Compiling the denormilization FST
+## Compiling the denormilization FST's
 Tiro Speech Core uses [OpenGram Thrax Grammer](https://www.openfst.org/twiki/bin/view/GRM/Thrax) for denormalization. The rules are located in `src/itn/`. 
 
 The `abbriviate` target compiles the grammar rules along with the mappings. This will result in a finite-state archive (.far) in `bazel-bin/src/itn/`. 
