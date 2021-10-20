@@ -1,0 +1,6 @@
+encoding: LINEAR16
+sample_rate_hertz: 16000
+language_code: "is_is"
+max_alternatives: 2
+enable_word_time_offsets: true
+enable_automatic_punctuation: true 
