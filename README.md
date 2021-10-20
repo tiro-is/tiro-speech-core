@@ -65,9 +65,9 @@ No. The service is available at `speech.tiro.is:443`.
     bazel run -c opt //:tiro_speech_client -- --use-ssl $PWD/examples/is_is-mbl_01-2011-12-02T14:22:29.744483.wav $PWD/examples/config.pbtxt speech.tiro.is:443
 
 ## Compiling the denormilization FST
-Tiro Speech Core uses [OpenGram Thrax Grammer](https://www.openfst.org/twiki/bin/view/GRM/Thrax) for denormilization. The rules are located in `src/itn/`. 
+Tiro Speech Core uses [OpenGram Thrax Grammer](https://www.openfst.org/twiki/bin/view/GRM/Thrax) for denormalization. The rules are located in `src/itn/`. 
 
-The `abbriviate` target compiles the grammer rules along with the mappings. This will result in a finite-state archive (.far) in `bazel-bin/src/itn/`. 
+The `abbriviate` target compiles the grammar rules along with the mappings. This will result in a finite-state archive (.far) in `bazel-bin/src/itn/`. 
 
     bazel build :abbreviate
 
@@ -75,7 +75,7 @@ We need to extract the FST. The following command will create `ABBREVIATE.fst` w
 
     bazel run -c opt @openfst//:farextract -- --filename_prefix=$PWD/models/norm --filename_suffix=.fst --keys=ABBREVIATE $PWD/bazel-bin/src/itn/abbreviate.far 
 
-Next compile the rewrite FST. Provide the symbol table located in `graph`. Note that `<space>` has to be a entry in the symbol table. 
+Next, compile the rewrite FST. Provide the symbol table located in `graph`. Note that `<space>` has to be an entry in the symbol table. 
     
     bazel run -c opt :prepare_lexicon_fst -- $PWD/models/graph/words.txt $PWD/models/norm/ABBREVIATE.fst $PWD/models/norm/rewrite_lex.fst
 
