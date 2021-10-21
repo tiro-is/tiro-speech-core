@@ -30,7 +30,7 @@ The output binary should now be in `bazel-bin/tiro_speech_server`.
 
 Build and test with the example client:
 
-    bazel run -c opt //:tiro_speech_client -- $PWD/examples/is_is-mbl_01-2011-12-02T14:22:29.744483.wav
+    bazel run -c opt //:tiro_speech_client -- $PWD/examples/is_is-mbl_01-2011-12-02T14:22:29.744483.wav $PWD/examples/config.pbtxt 0.0.0.0:50051
 
 Build and run the REST gateway:
 
@@ -61,6 +61,29 @@ has the usage:
 ## Do I have to run this my self??
 
 No. The service is available at `speech.tiro.is:443`.
+
+    bazel run -c opt //:tiro_speech_client -- --use-ssl $PWD/examples/is_is-mbl_01-2011-12-02T14:22:29.744483.wav $PWD/examples/config.pbtxt speech.tiro.is:443
+
+## Compiling the formatting FST's
+Tiro Speech Core uses [OpenGram Thrax Grammer](https://www.openfst.org/twiki/bin/view/GRM/Thrax) for formatting. The rules are located in `src/itn/`. 
+
+The `abbreviate` target compiles the grammar rules along with the mappings. This will result in a finite-state archive (.far) in `bazel-bin/src/itn/`. 
+
+    bazel build :abbreviate
+
+We need to extract the FST. The following command will create `ABBREVIATE.fst` which should be stored along with the model. 
+
+    bazel run -c opt @openfst//:farextract -- --filename_prefix=$PWD/models/norm --filename_suffix=.fst --keys=ABBREVIATE $PWD/bazel-bin/src/itn/abbreviate.far 
+
+Next, compile the rewrite FST. Provide the symbol table located in `graph`. Note that `<space>` has to be an entry in the symbol table. 
+    
+    bazel run -c opt :prepare_lexicon_fst -- $PWD/models/graph/words.txt $PWD/models/norm/ABBREVIATE.fst $PWD/models/norm/rewrite_lex.fst
+
+Finally, add the following flags with the appropriate path into the `main.conf` model fileþ 
+
+    --formatter.rewrite-fst=norm/ABBREVIATE.fst
+    --formatter.lexicon-fst=norm/rewrite_lex.fst
+
 
 ### Example usage of the REST gateway
 
