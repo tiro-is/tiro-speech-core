@@ -64,10 +64,10 @@ No. The service is available at `speech.tiro.is:443`.
 
     bazel run -c opt //:tiro_speech_client -- --use-ssl $PWD/examples/is_is-mbl_01-2011-12-02T14:22:29.744483.wav $PWD/examples/config.pbtxt speech.tiro.is:443
 
-## Compiling the denormilization FST's
-Tiro Speech Core uses [OpenGram Thrax Grammer](https://www.openfst.org/twiki/bin/view/GRM/Thrax) for denormalization. The rules are located in `src/itn/`. 
+## Compiling the formatting FST's
+Tiro Speech Core uses [OpenGram Thrax Grammer](https://www.openfst.org/twiki/bin/view/GRM/Thrax) for formatting. The rules are located in `src/itn/`. 
 
-The `abbriviate` target compiles the grammar rules along with the mappings. This will result in a finite-state archive (.far) in `bazel-bin/src/itn/`. 
+The `abbreviate` target compiles the grammar rules along with the mappings. This will result in a finite-state archive (.far) in `bazel-bin/src/itn/`. 
 
     bazel build :abbreviate
 
@@ -79,7 +79,7 @@ Next, compile the rewrite FST. Provide the symbol table located in `graph`. Note
     
     bazel run -c opt :prepare_lexicon_fst -- $PWD/models/graph/words.txt $PWD/models/norm/ABBREVIATE.fst $PWD/models/norm/rewrite_lex.fst
 
-Finally, add the following flags with the associate path into the `main.conf` model fileþ 
+Finally, add the following flags with the appropriate path into the `main.conf` model fileþ 
 
     --formatter.rewrite-fst=norm/ABBREVIATE.fst
     --formatter.lexicon-fst=norm/rewrite_lex.fst
