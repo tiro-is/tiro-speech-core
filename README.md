@@ -32,6 +32,13 @@ Build and test with the example client:
 
     bazel run -c opt //:tiro_speech_client -- $PWD/examples/is_is-mbl_01-2011-12-02T14:22:29.744483.wav $PWD/examples/config.pbtxt 0.0.0.0:50051
 
+The example client also supports streaming recognition, with a long audio file
+or from stdin, e.g. if `sox` is installed we can capture audio from the default
+microphone and transcribe it:
+
+    rec -q -r16k -c1 -esigned -traw - \
+      | bazel-bin/tiro_speech_client --streaming - $PWD/examples/config.pbtxt 0.0.0.0:50051 2>/dev/null
+
 Build and run the REST gateway:
 
     bazel run -c opt //rest-gateway/cmd:rest_gateway_server -- --endpoint=localhost:50051

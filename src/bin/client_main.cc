@@ -290,30 +290,40 @@ int templated_main(ProgramOptions& opts) {
     auto stream = stub->StreamingRecognize(&ctx);
 
     std::thread reader{[&stream]() {
-      StreamingRecognizeResponse res;
-      stream->WaitForInitialMetadata();
-      while (stream->Read(&res)) {
-        std::cerr << res.Utf8DebugString();
-        if (res.results_size() > 0) {
-          if (res.results(0).is_final()) {
-            std::cout << '\r' << res.results(0).alternatives(0).transcript()
-                      << '\n';
-          } else {
-            std::string partial = "";
-            for (const auto& partial_result : res.results()) {
-              partial += partial_result.alternatives(0).transcript();
+      try {
+        StreamingRecognizeResponse res;
+        stream->WaitForInitialMetadata();
+        while (stream->Read(&res)) {
+          std::cerr << res.Utf8DebugString();
+          if (res.results_size() > 0) {
+            if (res.results(0).is_final()) {
+              std::cout << '\r' << res.results(0).alternatives(0).transcript()
+                        << '\n';
+            } else {
+              std::string partial = "";
+              for (const auto& partial_result : res.results()) {
+                partial += partial_result.alternatives(0).transcript();
+              }
+              std::cout << "\r" << partial;
             }
-            std::cout << "\r" << partial;
           }
         }
+        std::cerr << "done reading\n";
+      } catch (const std::exception& e) {
+        std::cerr << "reader failure\n";
+        std::cerr << e.what() << '\n';
+        exit(EXIT_FAILURE);
       }
-      std::cerr << "done reading\n";
     }};
 
-    const std::chrono::milliseconds delay{2};
-    const std::string audio_content = GetFileContents(wave_filename);
-    std::size_t content_byte_offset_ = 0;
-    const std::size_t content_chunk_size_ = 4096;
+    std::ifstream wave_stream{
+        wave_filename == "-" ? "/dev/stdin" : wave_filename, std::ios::binary};
+    if (!wave_stream.is_open()) {
+      std::cerr << "Could not open stream from '" << wave_filename << "'\n";
+      return EXIT_FAILURE;
+    }
+
+    const std::size_t content_chunk_size_ = 1024;
 
     StreamingRecognizeRequest req;
     req.mutable_streaming_config()->mutable_config()->CopyFrom(config);
@@ -324,19 +334,16 @@ int templated_main(ProgramOptions& opts) {
       return EXIT_FAILURE;
     }
 
-    for (; content_byte_offset_ < audio_content.size();
-         content_byte_offset_ += content_chunk_size_ * 2) {
-      std::string chunk = audio_content.substr(
-          content_byte_offset_,
-          std::min(content_chunk_size_ * 2,
-                   audio_content.size() - content_byte_offset_));
+    std::string chunk;
+    chunk.resize(content_chunk_size_ * 2);
+    while (!wave_stream.read(&chunk[0], chunk.size()).eof()) {
       req.set_audio_content(std::move(chunk));
       if (!stream->Write(req)) {
         std::cerr << "Write failed\n";
         return EXIT_FAILURE;
       }
-      std::this_thread::sleep_for(delay);
     }
+
     stream->WritesDone();
     reader.join();
     if (grpc::Status stat = stream->Finish(); !stat.ok()) {
