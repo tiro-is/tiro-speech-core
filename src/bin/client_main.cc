@@ -91,6 +91,7 @@ struct ProgramOptions {
   bool print_help = false;
   bool punctuation = false;
   bool use_google_cloud_api = false;
+  bool interim_results = false;
 
   ProgramOptions() = default;
   ProgramOptions(int argc, char* argv[]) { Parse(argc, argv); }
@@ -105,7 +106,7 @@ struct ProgramOptions {
   void Parse(int argc, char* argv[]) {
     argc_ = argc - 1;
     for (int i = 1; i < argc; ++i) {
-      if (argv[i][0] != '-') {
+      if (std::strncmp(&argv[i][0], "--", 2) != 0) {
         argv_.push_back(argv[i]);
       } else if (std::string{"--use-ssl"} == argv[i]) {
         use_ssl = true;
@@ -121,6 +122,9 @@ struct ProgramOptions {
         argc_--;
       } else if (std::string{"--use-google-cloud-api"} == argv[i]) {
         use_google_cloud_api = true;
+        argc_--;
+      } else if (std::string{"--interim-results"} == argv[i]) {
+        interim_results = true;
         argc_--;
       } else {
         std::cerr << "Invalid option\n";
@@ -313,7 +317,7 @@ int templated_main(ProgramOptions& opts) {
 
     StreamingRecognizeRequest req;
     req.mutable_streaming_config()->mutable_config()->CopyFrom(config);
-    req.mutable_streaming_config()->set_interim_results(true);
+    req.mutable_streaming_config()->set_interim_results(opts.interim_results);
 
     if (!stream->Write(req)) {
       std::cerr << "Initial write failed\n";
