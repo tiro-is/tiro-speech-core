@@ -40,6 +40,7 @@ import (
 var (
 	endpoint   = flag.String("endpoint", "localhost:9090", "endpoint of the gRPC service")
 	network    = flag.String("network", "tcp", `one of "tcp" or "unix". Must be consistent to -endpoint`)
+	listenaddr = flag.String("listenaddr", ":8080", "address to listen at")
 )
 
 func main() {
@@ -48,7 +49,7 @@ func main() {
 
 	ctx := context.Background()
 	opts := gateway.Options{
-		Addr: ":8080",
+		Addr: *listenaddr,
 		GRPCServer: gateway.Endpoint{
 			Network: *network,
 			Addr:    *endpoint,
