@@ -323,8 +323,6 @@ int templated_main(ProgramOptions& opts) {
       return EXIT_FAILURE;
     }
 
-    const std::size_t content_chunk_size_ = 1024;
-
     StreamingRecognizeRequest req;
     req.mutable_streaming_config()->mutable_config()->CopyFrom(config);
     req.mutable_streaming_config()->set_interim_results(opts.interim_results);
@@ -334,10 +332,12 @@ int templated_main(ProgramOptions& opts) {
       return EXIT_FAILURE;
     }
 
-    std::string chunk;
-    chunk.resize(content_chunk_size_ * 2);
-    while (!wave_stream.read(&chunk[0], chunk.size()).eof()) {
-      req.set_audio_content(std::move(chunk));
+    const std::size_t content_chunk_size_bytes = 1024 * 2;
+    req.mutable_audio_content()->resize(content_chunk_size_bytes);
+    while (!wave_stream
+                .read(req.mutable_audio_content()->data(),
+                      content_chunk_size_bytes)
+                .eof()) {
       if (!stream->Write(req)) {
         std::cerr << "Write failed\n";
         return EXIT_FAILURE;
