@@ -12,8 +12,8 @@ def tiro_speech_core_repositories():
     )
 
     # commit d54c78ab86b40770ee19f0949db9d74a831ab9f0
-    rules_foreign_cc_version = "0.5.1"
-    rules_foreign_cc_sha256 = "d095de783abc687d25fbaab87705be8d00fa8643f4ffd03494698c56e97437bf"
+    rules_foreign_cc_version = "0.7.1"
+    rules_foreign_cc_sha256 = "7350440503d8e3eafe293229ce5f135e8f65a59940e9a34614714f6063df72c3"
     http_archive(
         name = "rules_foreign_cc",
         strip_prefix = "rules_foreign_cc-" + rules_foreign_cc_version,
@@ -69,11 +69,13 @@ def tiro_speech_core_repositories():
         build_file = "//third_party:spdlog.BUILD",
     )
 
-    rules_python_version = "0.3.0"
+    rules_python_version = "0.6.0"
+    rules_python_sha256 = "a30abdfc7126d497a7698c29c46ea9901c6392d6ed315171a6df5ce433aa4502"
     http_archive(
         name = "rules_python",
-        url = "https://github.com/bazelbuild/rules_python/releases/download/{v}/rules_python-{v}.tar.gz".format(v = rules_python_version),
-        sha256 = "934c9ceb552e84577b0faf1e5a2f0450314985b4d8712b2b70717dc679fdc01b",
+        url = "https://github.com/bazelbuild/rules_python/archive/{v}.tar.gz".format(v = rules_python_version),
+        strip_prefix = "rules_python-{v}".format(v = rules_python_version),
+        sha256 = rules_python_sha256,
     )
 
     # gRPC
@@ -118,11 +120,12 @@ def tiro_speech_core_repositories():
     )
 
     # Catch2
-    catch2_version = "2.13.4"
+    catch2_version = "2.13.8"
+    catch2_sha256 = None
     http_archive(
         name = "catch2",
         urls = ["https://github.com/catchorg/Catch2/archive/v{}.tar.gz".format(catch2_version)],
-        sha256 = "e7eb70b3d0ac2ed7dcf14563ad808740c29e628edde99e973adad373a2b5e4df",
+        sha256 = catch2_sha256,
         strip_prefix = "Catch2-{}".format(catch2_version),
     )
 
@@ -198,10 +201,11 @@ def tiro_speech_core_repositories():
         strip_prefix = "grpc-gateway-{}".format(grpc_ecosystem_grpc_gateway_version),
     )
 
-    io_bazel_rules_docker_version = "0.15.0"
+    io_bazel_rules_docker_version = "0.23.0"
+    io_bazel_rules_docker_sha256 = "85ffff62a4c22a74dbd98d05da6cf40f497344b3dbf1e1ab0a37ab2a1a6ca014"
     http_archive(
         name = "io_bazel_rules_docker",
-        sha256 = "1698624e878b0607052ae6131aa216d45ebb63871ec497f26c67455b34119c80",
+        sha256 = io_bazel_rules_docker_sha256,
         strip_prefix = "rules_docker-{}".format(io_bazel_rules_docker_version),
         urls = [
             "https://github.com/bazelbuild/rules_docker/releases/download/v{v}/rules_docker-v{v}.tar.gz".format(v = io_bazel_rules_docker_version),
@@ -270,10 +274,11 @@ def extra_repositories():
     # )
 
     # Needed for k8s deployment
-    rules_gitops_version = "8d9416a36904c537da550c95dc7211406b431db9"
+    rules_gitops_version = "3ee1ae1f6f4efdd1a57b7a60474e9f61eeeeb8b7"
+    rules_gitops_sha256 = "3ac020eb39724c760d469b1a281f8a816d3f56e8874399218c4578e76b67cfed"
     http_archive(
         name = "com_adobe_rules_gitops",
-        sha256 = "25601ed932bab631e7004731cf81a40bd00c9a34b87c7de35f6bc905c37ef30d",
+        sha256 = rules_gitops_sha256,
         strip_prefix = "rules_gitops-{}".format(rules_gitops_version),
         urls = ["https://github.com/adobe/rules_gitops/archive/{}.zip".format(rules_gitops_version)],
     )
