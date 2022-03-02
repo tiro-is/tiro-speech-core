@@ -273,6 +273,24 @@ def extra_repositories():
     #     sha256 = "bcecfd622c4ef272fd4ba42726a52e140b961c4eac23025f18b346c968a8cfb4",
     # )
 
+    grpcwebproxy_version = "0.15.0"
+    grpcwebproxy_sha256 = "c3d5352988bc8cf44ba1a9c923fc9f4c4f46713ae2f9c7755cf8e2c130128943"
+    http_archive(
+        name = "grpcwebproxy",
+        urls = ["https://github.com/improbable-eng/grpc-web/releases/download/v{v}/grpcwebproxy-v{v}-linux-x86_64.zip".format(v = grpcwebproxy_version)],
+        sha256 = grpcwebproxy_sha256,
+        strip_prefix = "dist",
+        build_file_content = """\
+load("@rules_pkg//:pkg.bzl", "pkg_tar")
+pkg_tar(
+  name = "grpcwebproxy",
+  srcs = ["grpcwebproxy-v{v}-linux-x86_64"],
+  remap_paths = {{"/grpcwebproxy-v{v}-linux-x86_64": "/grpcwebproxy"}},
+  visibility = ["//visibility:public"]
+)
+""".format(v = grpcwebproxy_version)
+    )
+
     # Needed for k8s deployment
     rules_gitops_version = "3ee1ae1f6f4efdd1a57b7a60474e9f61eeeeb8b7"
     rules_gitops_sha256 = "3ac020eb39724c760d469b1a281f8a816d3f56e8874399218c4578e76b67cfed"

@@ -9,6 +9,9 @@ spec:
   - name: grpc
     port: 50051
     targetPort: 50051
+  - name: grpcwebproxy
+    port: 8443
+    targetPort: 8443
   - name: rest
     port: 8080
     targetPort: 8080
