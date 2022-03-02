@@ -45,7 +45,7 @@ configure_make(
     ],
     deps = [
         "@boringssl//:ssl",
-        "@bzip2",
+        "@bzip2//:bz2",
         "@zlib",
     ],
 )

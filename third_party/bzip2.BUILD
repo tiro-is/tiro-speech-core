@@ -1,7 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
 cc_library(
-    name = "bzip2",
+    name = "bz2",
     srcs = [
         "blocksort.c",
         "bzlib.c",
