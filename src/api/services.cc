@@ -269,7 +269,6 @@ class ChunkConverter {
   Vector ToWaveform(const std::string& chunk, bool more_data_available) {
     Vector waveform;
     Linear16BytesToWaveVector(chunk, &waveform);
-    return waveform;
 
     if (sample_rate_ != model_sample_rate_) {
       Vector waveform_resampled;
