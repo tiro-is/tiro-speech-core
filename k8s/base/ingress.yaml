@@ -4,7 +4,8 @@ metadata:
   name: tiro-speech-core-h2c-ingress
   annotations:
     kubernetes.io/ingress.class: traefik
-    ingress.kubernetes.io/protocol: h2c
+    ingress.kubernetes.io/protocol: https
+    traefik.ingress.kubernetes.io/protocol: https
 spec:
   rules:
   - host: speech.tiro.is
@@ -13,7 +14,7 @@ spec:
       - path: /
         backend:
           serviceName: tiro-speech-core-svc
-          servicePort: grpc
+          servicePort: grpcwebproxy
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress

@@ -1,5 +1,6 @@
 load("@com_github_bazelbuild_buildtools//buildifier:def.bzl", "buildifier")
 load("@io_bazel_rules_docker//cc:image.bzl", "cc_image")
+load("@io_bazel_rules_docker//container:container.bzl", "container_image")
 load("//tools/thrax:defs.bzl", "compile_grm")
 
 licenses(["notice"])  # Apache 2.0
@@ -145,4 +146,13 @@ cc_image(
     base = "@ubuntu_groovy_x86_64//image",
     binary = ":tiro_speech_client",
     visibility = ["//visibility:public"],
+)
+
+
+container_image(
+    name = "grpcwebproxy_image",
+    tars = ["@grpcwebproxy//:grpcwebproxy"],
+    entrypoint = ["./grpcwebproxy"],
+    ports = ["8080"],
+    visibility = ["//k8s:__pkg__"],
 )

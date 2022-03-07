@@ -12,6 +12,7 @@ k8s_deploy(
     images = {
         "tiro-speech-server": "//:tiro_speech_server_image",
         "tiro-speech-rest-gateway": "//rest-gateway/cmd:rest_gateway_server_image",
+        "grpcwebproxy": "//:grpcwebproxy_image",
     },
     manifests = glob(
         [

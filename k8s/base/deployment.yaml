@@ -59,6 +59,29 @@ spec:
         - -endpoint=localhost:50051
         - -logtostderr
         - -v=2
+      - name: grpcwebproxy
+        image: grpcwebproxy
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8081
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /keys
+          name: keys
+          readOnly: true
+        args:
+        - --backend_addr=localhost:50051
+        - --run_http_server=true
+        - --run_tls_server=true
+        - --server_http_debug_port=8081
+        - --use_websockets=true
+        - --allow_all_origins
+        - --server_http_tls_port=8443
+        - --server_tls_cert_file=/keys/server.crt
+        - --server_tls_key_file=/keys/server.key
       volumes:
       - name: models
         emptyDir: {}
+      - name: keys
+        secret:
+          secretName: internal-cert
