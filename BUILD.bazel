@@ -1,6 +1,10 @@
 load("@com_github_bazelbuild_buildtools//buildifier:def.bzl", "buildifier")
 load("@io_bazel_rules_docker//cc:image.bzl", "cc_image")
-load("@io_bazel_rules_docker//container:container.bzl", "container_image")
+load(
+    "@io_bazel_rules_docker//container:container.bzl",
+    "container_image",
+    "container_bundle"
+)
 load("//tools/thrax:defs.bzl", "compile_grm")
 
 licenses(["notice"])  # Apache 2.0
@@ -121,7 +125,7 @@ cc_binary(
 
 cc_image(
     name = "tiro_speech_server_image",
-    base = "@ubuntu_groovy_x86_64//image",
+    base = "@ubuntu_impish_x86_64//image",
     binary = ":tiro_speech_server",
     visibility = ["//visibility:public"],
 )
@@ -143,7 +147,7 @@ cc_binary(
 
 cc_image(
     name = "tiro_speech_client_image",
-    base = "@ubuntu_groovy_x86_64//image",
+    base = "@ubuntu_impish_x86_64//image",
     binary = ":tiro_speech_client",
     visibility = ["//visibility:public"],
 )
@@ -155,4 +159,14 @@ container_image(
     entrypoint = ["./grpcwebproxy"],
     ports = ["8080"],
     visibility = ["//k8s:__pkg__"],
+)
+
+# This target creates a container image bundle tiro_speech_images.tar that can
+# be loaded using `docker load`
+container_bundle(
+    name = "tiro_speech_images",
+    images = {
+        "tiro-speech-server:latest": ":tiro_speech_server_image",
+        "tiro-speech-client:latest": ":tiro_speech_client_image",
+    },
 )

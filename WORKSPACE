@@ -166,8 +166,9 @@ load(
 
 # Base image for our cc_images
 container_pull(
-    name = "ubuntu_groovy_x86_64",
-    digest = "sha256:754eb641a1ba98a8b483c3595a14164fa4ed7f4b457e1aa05f13ce06f8151723",
+    name = "ubuntu_impish_x86_64",
+    # ubuntu:impish-20220301
+    digest = "sha256:4e4222975b1673cbbff799934fa00dc0b3191d0c9a7711f5b1d0b81fdcbfe6aa",
     registry = "index.docker.io",
     repository = "library/ubuntu",
 )
