@@ -86,7 +86,7 @@ Next, compile the rewrite FST. Provide the symbol table located in `graph`. Note
     
     bazel run -c opt :prepare_lexicon_fst -- $PWD/models/graph/words.txt $PWD/models/norm/ABBREVIATE.fst $PWD/models/norm/rewrite_lex.fst
 
-Finally, add the following flags with the appropriate path into the `main.conf` model fileþ 
+Finally, add the following flags with the appropriate path into the `main.conf` model file:
 
     --formatter.rewrite-fst=norm/ABBREVIATE.fst
     --formatter.lexicon-fst=norm/rewrite_lex.fst
