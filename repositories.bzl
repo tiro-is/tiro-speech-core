@@ -121,7 +121,7 @@ def tiro_speech_core_repositories():
 
     # Catch2
     catch2_version = "2.13.8"
-    catch2_sha256 = None
+    catch2_sha256 = "b9b592bd743c09f13ee4bf35fc30eeee2748963184f6bea836b146e6cc2a585a"
     http_archive(
         name = "catch2",
         urls = ["https://github.com/catchorg/Catch2/archive/v{}.tar.gz".format(catch2_version)],
