@@ -76,11 +76,11 @@ Tiro Speech Core uses [OpenGram Thrax Grammer](https://www.openfst.org/twiki/bin
 
 The `abbreviate` target compiles the grammar rules along with the mappings. This will result in a finite-state archive (.far) in `bazel-bin/src/itn/`. 
 
-    bazel build :abbreviate
+    bazel build -c opt :abbreviate
 
-We need to extract the FST. The following command will create `ABBREVIATE.fst` which should be stored along with the model. 
+We need to extract the FST. Create the folders `models/graph` and `models/norm` if needed. The following command will create `ABBREVIATE.fst` which should be stored along with the model. 
 
-    bazel run -c opt @openfst//:farextract -- --filename_prefix=$PWD/models/norm --filename_suffix=.fst --keys=ABBREVIATE $PWD/bazel-bin/src/itn/abbreviate.far 
+    bazel run -c opt @openfst//:farextract -- --filename_prefix=$PWD/models/norm/ --filename_suffix=.fst --keys=ABBREVIATE $PWD/bazel-bin/src/itn/abbreviate.far 
 
 Next, compile the rewrite FST. Provide the symbol table located in `graph`. Note that `<space>` has to be an entry in the symbol table. 
     
