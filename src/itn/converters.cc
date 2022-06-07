@@ -47,6 +47,42 @@ fst::VectorFst<fst::TimingArc> Convert(
   return fst;
 }
 
+fst::VectorFst<fst::TimingArc> ConvertToByteFst(
+    const std::vector<AlignedWord>& word_alis) {
+  using Label = unsigned char;
+  using Arc = fst::TimingArc;
+  using Fst = fst::VectorFst<Arc>;
+  constexpr unsigned char separator = ' ';
+
+  Fst fst{};
+  auto cur_state = fst.AddState();
+  fst.SetStart(cur_state);
+
+  for (const auto& ali : word_alis) {
+    std::vector<Label> labels;
+    fst::ByteStringToLabels(ali.word_symbol, &labels);
+
+    fst.AddStates(labels.size() + 1);
+    for (auto label : labels) {
+      fst.AddArc(cur_state,
+                 Arc{label, label, Arc::Weight::One(), cur_state + 1});
+      ++cur_state;
+    }
+
+    // The weight, i.e. timing information, is attached to the space separator
+    fst::TimingWeight w(ali.start_time, ali.start_time + ali.duration);
+    fst.AddArc(cur_state, Arc{separator, separator, w, cur_state + 1});
+    ++cur_state;
+  }
+
+  fst.SetFinal(cur_state, Arc::Weight::One());
+  fst.SetProperties(fst::kCompiledStringProperties,
+                    fst::kCompiledStringProperties);
+
+  fst::TopSort(&fst);
+  return fst;
+}
+
 fst::VectorFst<fst::StdArc> ConvertToTropical(
     const std::vector<AlignedWord>& word_alis, const fst::SymbolTable& syms) {
   fst::VectorFst<fst::StdArc> fst{};
@@ -78,6 +114,40 @@ fst::VectorFst<fst::StdArc> ConvertToTropical(
   return fst;
 }
 
+fst::VectorFst<fst::StdArc> ConvertToTropicalByteFst(
+    const std::vector<AlignedWord>& word_alis) {
+  using Label = unsigned char;
+  using Arc = fst::StdArc;
+  using Fst = fst::VectorFst<Arc>;
+  constexpr unsigned char separator = ' ';
+
+  Fst fst{};
+
+  auto cur_state = fst.AddState();
+  fst.SetStart(cur_state);
+
+  for (const auto& ali : word_alis) {
+    std::vector<Label> labels;
+    fst::ByteStringToLabels(ali.word_symbol, &labels);
+
+    fst.AddStates(labels.size() + 1);
+    for (auto label : labels) {
+      fst.AddArc(cur_state, Arc{label, label, cur_state + 1});
+      ++cur_state;
+    }
+
+    fst.AddArc(cur_state, Arc{separator, separator, cur_state + 1});
+    ++cur_state;
+  }
+
+  fst.SetFinal(cur_state, Arc::Weight::One());
+  fst.SetProperties(fst::kCompiledStringProperties,
+                    fst::kCompiledStringProperties);
+
+  fst::TopSort(&fst);
+  return fst;
+}
+
 std::vector<AlignedWord> Convert(const fst::VectorFst<fst::TimingArc>& fst) {
   std::vector<AlignedWord> word_alis{};
 
@@ -89,6 +159,14 @@ std::vector<AlignedWord> Convert(const fst::VectorFst<fst::TimingArc>& fst) {
     for (fst::ArcIterator aiter(fst, state_id); !aiter.Done(); aiter.Next()) {
       const auto& arc = aiter.Value();
 
+      if (arc.weight != fst::TimingWeight::One()) {
+        if (current_weight == fst::TimingWeight::One()) {
+          current_weight = arc.weight;
+        } else {
+          current_weight = fst::Times(current_weight, arc.weight);
+        }
+      }
+
       // A space begins a new ali
       if (arc.olabel == ' ') {
         current_ali.start_time =
@@ -98,19 +176,7 @@ std::vector<AlignedWord> Convert(const fst::VectorFst<fst::TimingArc>& fst) {
         word_alis.push_back(current_ali);
         current_ali = AlignedWord{};
         current_weight = fst::TimingWeight::One();
-
-        continue;
-      }
-
-      if (arc.weight != fst::TimingWeight::One()) {
-        if (current_weight == fst::TimingWeight::One()) {
-          current_weight = arc.weight;
-        } else {
-          current_weight = fst::Times(current_weight, arc.weight);
-        }
-      }
-
-      if (arc.olabel != 0) {
+      } else if (arc.olabel != 0) {
         current_ali.word_symbol.append(1, arc.olabel);
       }
     }

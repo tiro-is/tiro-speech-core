@@ -37,12 +37,27 @@ fst::VectorFst<fst::TimingArc> Convert(
     const std::vector<AlignedWord>& word_alis, const fst::SymbolTable& syms);
 
 /**
+ * Convert from a vector of aligned words to a Timing byte string FST
+ *
+ * This Timing FST is defined here as a linear acceptor that encodes each word
+ * as a string of bytes ending with a separator character (' ').
+ */
+fst::VectorFst<fst::TimingArc> ConvertToByteFst(
+    const std::vector<AlignedWord>& word_alis);
+
+/**
  * Convert from a vector of aligned words to an unweighted StdFst
  *
  * The symbol table \p syms has to include the symbol '<space>'
  */
 fst::VectorFst<fst::StdArc> ConvertToTropical(
     const std::vector<AlignedWord>& word_alis, const fst::SymbolTable& syms);
+
+/**
+ * Convert from a vector of aligned words into an unweighted StdFst of bytes
+ */
+fst::VectorFst<fst::StdArc> ConvertToTropicalByteFst(
+    const std::vector<AlignedWord>& word_alis);
 
 /**
  *  Convert from a linear TimingFst to a vector of word aligments

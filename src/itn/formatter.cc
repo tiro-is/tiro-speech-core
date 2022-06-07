@@ -97,22 +97,11 @@ Formatter::Formatter(const FormatterConfig& opts) {
         fmt::format("Could not read rewrite FST from file '{}'",
                     opts.rewrite_fst_filename)};
   }
-
-  lexicon_fst_.reset(fst::StdFst::Read(opts.lexicon_fst_filename));
-  if (rewrite_fst_ == nullptr) {
-    throw std::runtime_error{
-        fmt::format("Could not read lexicon FST from file '{}'",
-                    opts.lexicon_fst_filename)};
-  }
 }
 
 std::vector<AlignedWord> Formatter::FormatWords(
-    const fst::SymbolTable& isyms,
     const std::vector<AlignedWord>& words) const {
-  fst::VectorFst<Arc> words_fst = ConvertToTropical(words, isyms);
-
-  fst::VectorFst<Arc> words_byte_fst;
-  fst::Compose(words_fst, *lexicon_fst_, &words_byte_fst);
+  auto words_byte_fst = ConvertToTropicalByteFst(words);
 
   fst::ArcSort(&words_byte_fst, fst::OLabelCompare<Arc>{});
   fst::VectorFst<Arc> formatted_candidates_fst{};
@@ -125,7 +114,7 @@ std::vector<AlignedWord> Formatter::FormatWords(
   fst::ArcMap(formatted_words_fst, &formatted_time_fst,
               fst::WeightConvertMapper<Arc, fst::TimingArc>{});
 
-  fst::TimingFst timing_symbol_fst = Convert(words, isyms);
+  fst::TimingFst timing_symbol_fst = ConvertToByteFst(words);
   fst::TimingFst timing_byte_fst{};
   fst::Compose(timing_symbol_fst, formatted_time_fst, &timing_byte_fst);
 
@@ -140,10 +129,9 @@ void Capitalize(std::string& str) {
 }
 
 fst::VectorFst<fst::StdArc> CreateLexiconFst(
-    const fst::SymbolTable& input_symbols) {
+    const fst::SymbolTable& input_symbols,
+    const std::vector<std::string>& filter) {
   // TODO(rkjaran): Make this configurable
-  constexpr std::array filter{"<eps>", "<s>", "</s>", "#0", "<space>"};
-
   fst::VectorFst<fst::StdArc> lexicon_fst;
 
   std::vector<std::vector<std::string>> string_map;
@@ -158,23 +146,30 @@ fst::VectorFst<fst::StdArc> CreateLexiconFst(
     string_map.push_back({symbol_str, symbol_str});
   }
 
+  TIRO_SPEECH_INFO("Compiling string map");
   if (!fst::StringMapCompile(string_map, &lexicon_fst, fst::TokenType::SYMBOL,
                              fst::TokenType::BYTE, &input_symbols)) {
     TIRO_SPEECH_FATAL("Could not compile string map");
   }
+  string_map.clear();
 
+  TIRO_SPEECH_INFO("Compiling space string map");
   fst::VectorFst<fst::StdArc> space_fst;
   std::vector<std::vector<std::string>> space_map{{"<space>", " "}};
   if (!fst::StringMapCompile(space_map, &space_fst, fst::TokenType::SYMBOL,
                              fst::TokenType::BYTE, &input_symbols)) {
     TIRO_SPEECH_FATAL("Could not compile space string map");
   }
+  TIRO_SPEECH_INFO("Finished compiling space string map");
 
   // This is an artifact we'll have to live with... ending every word with a
   // space, even the last one
   fst::Concat(&lexicon_fst, space_fst);
+
+  TIRO_SPEECH_INFO("Getting the closure of the string map");
   fst::Closure(&lexicon_fst, fst::ClosureType::CLOSURE_PLUS);
 
+  TIRO_SPEECH_INFO("Optimizing the lexicon");
   Optimize(&lexicon_fst);
   fst::ArcSort(&lexicon_fst, fst::ILabelCompare<fst::StdArc>());
 

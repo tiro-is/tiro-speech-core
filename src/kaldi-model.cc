@@ -44,13 +44,10 @@ void KaldiModelConfig::Check() const {
     error_occured = true;
     TIRO_SPEECH_ERROR("Flag language_code can't be empty.");
   }
-  if ((!formatter_config.lexicon_fst_filename.empty() &&
-       formatter_config.lexicon_fst_filename.empty()) ||
-      (formatter_config.lexicon_fst_filename.empty() &&
-       !formatter_config.lexicon_fst_filename.empty())) {
+  if (formatter_enabled && formatter_config.rewrite_fst_filename.empty()) {
     error_occured = true;
     TIRO_SPEECH_ERROR(
-        "Both formatter.lexicon-fst AND formatter.rewrite-fst have to be set");
+        "Flag formatter_enabled set but missing formatter.rewrite-fst");
   }
   if (diarization_enabled &&
       (xvector_diarization_config.plda_filename.empty() ||
@@ -116,7 +113,7 @@ KaldiModel::KaldiModel(const KaldiModelConfig& config)
         std::make_shared<itn::ElectraPunctuator>(config.punctuator_config);
   }
 
-  if (!config.formatter_config.lexicon_fst_filename.empty() &&
+  if (config.formatter_enabled &&
       !config.formatter_config.rewrite_fst_filename.empty()) {
     formatter = std::make_shared<itn::Formatter>(config.formatter_config);
   }
