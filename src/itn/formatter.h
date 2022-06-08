@@ -82,18 +82,17 @@ class LookAheadFormatter {
 };
 
 struct FormatterConfig {
-  std::string lexicon_fst_filename = "";
   std::string rewrite_fst_filename = "";
 
   void Register(OptionsItf* opts) {
+    opts->Register("lexicon-fst", &ignored_string, "DEPRECATED Ignored.");
     opts->Register(
-        "lexicon-fst", &lexicon_fst_filename,
-        "Filename (possibly extended) of FST mapping from symbols to bytes");
-    opts->Register("rewrite-fst", &rewrite_fst_filename,
-                   "Filename (possibly extended) of rewriter FST. "
-                   "It must map from model.word_symbols to a string of bytes. "
-                   "model.word_symbols MUST contain a <space> symbol.");
+        "rewrite-fst", &rewrite_fst_filename,
+        "Filename (possibly extended) of byte-to-byte rewriter FST. ");
   }
+
+ private:
+  std::string ignored_string = "";
 };
 
 /**
@@ -110,29 +109,27 @@ class Formatter {
   /**
    * Format a vector of aligned words
    *
-   * The symbol table \p isyms MUST be compatible with the rewrite FST and all
-   * elements of \p words MUST exist in \p isyms. The word symbols returned may
-   * or may not exist \p isyms but will be formatted according to the rules of
-   * the formatter. The time synchronization is preserved.
-   *
+   * The time synchronization is preserved.
    */
   std::vector<AlignedWord> FormatWords(
-      const fst::SymbolTable& isyms,
       const std::vector<AlignedWord>& words) const;
 
  private:
   std::unique_ptr<fst::StdFst> rewrite_fst_;
-  std::unique_ptr<fst::StdFst> lexicon_fst_;
 };
 
 void Capitalize(std::string& str);
 
 /**
- * Create an FST that maps from a symbol in input_symbols to the bytes in that
- * symbol. The output FST is olabel sorted.
+ * Create an FST that maps from a symbol in \p input_symbols to the bytes in
+ * that symbol. The output FST is olabel sorted. \p filter should specify all
+ * special symbols in \p input_symbols that should not be included in the
+ * lexicon FST
  */
 fst::VectorFst<fst::StdArc> CreateLexiconFst(
-    const fst::SymbolTable& input_symbols);
+    const fst::SymbolTable& input_symbols,
+    const std::vector<std::string>& filter = {"<eps>", "<s>", "</s>", "#0",
+                                              "<space>"});
 
 /**
  * Compose a lexicon and rewrite and convert it to a lookahead FST

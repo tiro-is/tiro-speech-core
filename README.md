@@ -82,15 +82,9 @@ We need to extract the FST. Create the folders `models/graph` and `models/norm` 
 
     bazel run -c opt @openfst//:farextract -- --filename_prefix=$PWD/models/norm/ --filename_suffix=.fst --keys=ABBREVIATE $PWD/bazel-bin/src/itn/abbreviate.far 
 
-Next, compile the rewrite FST. Provide the symbol table located in `graph`. Note that `<space>` has to be an entry in the symbol table. 
-    
-    bazel run -c opt :prepare_lexicon_fst -- $PWD/models/graph/words.txt $PWD/models/norm/ABBREVIATE.fst $PWD/models/norm/rewrite_lex.fst
-
 Finally, add the following flags with the appropriate path into the `main.conf` model file:
 
     --formatter.rewrite-fst=norm/ABBREVIATE.fst
-    --formatter.lexicon-fst=norm/rewrite_lex.fst
-
 
 ### Example usage of the REST gateway
 

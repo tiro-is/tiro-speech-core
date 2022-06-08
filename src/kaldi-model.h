@@ -54,6 +54,7 @@ struct KaldiModelConfig {
 
   itn::ElectraPunctuatorConfig punctuator_config;
 
+  bool formatter_enabled = true;
   itn::FormatterConfig formatter_config;
 
   bool diarization_enabled = false;
@@ -95,6 +96,9 @@ struct KaldiModelConfig {
 
     ParseOptions formatter_opts{"formatter", opts};
     formatter_config.Register(&formatter_opts);
+    opts->Register(
+        "formatter-enabled", &formatter_enabled,
+        "Enable formatting support, i.e. ITN. Requires a rewrite FST");
 
     opts->Register("diarization-enabled", &diarization_enabled,
                    "Enable diarization support. Requires model files and "

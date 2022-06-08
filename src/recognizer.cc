@@ -200,8 +200,7 @@ bool Recognizer::GetResults(int32_t max_alternatives,
 
   if (model_.formatter != nullptr) {
     TIRO_SPEECH_DEBUG("Formatting best aligned hypothesis");
-    *best_aligned =
-        model_.formatter->FormatWords(*model_.word_syms, *best_aligned);
+    *best_aligned = model_.formatter->FormatWords(*best_aligned);
   }
 
   std::vector<std::string> first_word_symbols;
