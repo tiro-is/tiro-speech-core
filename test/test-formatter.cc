@@ -192,3 +192,51 @@ TEST_CASE("LookAheadFormatter can format a weird vector of AlignedWords",
             expected_alis_output[idx].start_time);
   }
 }
+
+TEST_CASE("Formatter can actually format stuff", "[fst][itn]") {
+  using namespace tiro_speech;
+  using namespace tiro_speech::itn;
+
+  FormatterConfig opts;
+  opts.rewrite_fst_filename = "ITN.fst";
+  Formatter formatter{opts};
+
+  const std::vector<AlignedWord> words{
+      {1178590ms, 1140ms, "göngudeildarþjónusta"},
+      {1180780ms, 390ms, "núll"},
+      {1181170ms, 240ms, "fimmtíu"},
+      {1181409ms, 299ms, "milljónir"},
+      {1181709ms, 149ms, "króna"},
+      {1181890ms, 180ms, "á"},
+      {1182069ms, 539ms, "ári,"},
+      {1183030ms, 269ms, "að"},
+      {1183299ms, 180ms, "hún"},
+      {1183480ms, 149ms, "hafi"},
+      {1183629ms, 149ms, "ekki"},
+      {1183780ms, 330ms, "fengið"},
+      {1184110ms, 120ms, "eina"},
+      {1184230ms, 299ms, "einustu"},
+      {1184530ms, 299ms, "krónu"}};
+
+  const std::vector<AlignedWord> expected_formatted_words{
+      {1178590ms, 1140ms, "göngudeildarþjónusta"},
+      {1180780ms, 390ms, "0"},
+      {1181170ms, 240ms, "50"},
+      {1181409ms, 299ms, "millj."},
+      {1181709ms, 149ms, "kr."},
+      {1181890ms, 180ms, "á"},
+      {1182069ms, 539ms, "ári,"},
+      {1183030ms, 269ms, "að"},
+      {1183299ms, 180ms, "hún"},
+      {1183480ms, 149ms, "hafi"},
+      {1183629ms, 149ms, "ekki"},
+      {1183780ms, 330ms, "fengið"},
+      {1184110ms, 120ms, "eina"},
+      {1184230ms, 299ms, "einustu"},
+      {1184530ms, 299ms, "krónu"}};
+
+  auto formatted_words = formatter.FormatWords(words);
+
+  REQUIRE_THAT(formatted_words,
+               Catch::Matchers::Equals(expected_formatted_words));
+}

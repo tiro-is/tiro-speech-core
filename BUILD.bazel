@@ -71,7 +71,7 @@ compile_grm(
 grm_export_fsts(
     name = "abbreviate_fst",
     src = ":abbreviate",
-    rules = ["ABBREVIATE"],
+    rules = ["ABBREVIATE", "ITN"],
     visibility = ["//test:__pkg__"],
 )
 

@@ -41,7 +41,7 @@ cc_test(
 cc_test(
     name = "formatter",
     srcs = ["test-formatter.cc"],
-    data = glob(["test_model/**/*"]),
+    data = glob(["test_model/**/*"]) + ["//:abbreviate_fst"],
     deps = [
         ":catch_main",
         "//:tiro_speech",

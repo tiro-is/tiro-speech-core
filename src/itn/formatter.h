@@ -88,7 +88,13 @@ struct FormatterConfig {
     opts->Register("lexicon-fst", &ignored_string, "DEPRECATED Ignored.");
     opts->Register(
         "rewrite-fst", &rewrite_fst_filename,
-        "Filename (possibly extended) of byte-to-byte rewriter FST. ");
+        "Filename (possibly extended) of byte-to-byte rewriter FST. "
+        "The following properties must hold to keep word-level timing accurate:"
+        "\n - "
+        "an input label appears before any of the corresponding output labels"
+        "\n - "
+        "output labels corresponding to a given input label appear before the "
+        "next input label.");
   }
 
  private:

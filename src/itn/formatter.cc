@@ -116,6 +116,7 @@ std::vector<AlignedWord> Formatter::FormatWords(
 
   fst::TimingFst timing_symbol_fst = ConvertToByteFst(words);
   fst::TimingFst timing_byte_fst{};
+  fst::ArcSort(&timing_symbol_fst, fst::OLabelCompare<fst::TimingArc>{});
   fst::Compose(timing_symbol_fst, formatted_time_fst, &timing_byte_fst);
 
   return Convert(timing_byte_fst);
