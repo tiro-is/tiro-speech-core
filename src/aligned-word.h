@@ -34,6 +34,11 @@ struct AlignedWord {
 
   AlignedWord() : start_time{0}, duration{0}, word_symbol{""} {}
 
+  bool operator!=(const AlignedWord& other) const {
+    return !(start_time == other.start_time && duration == other.duration &&
+             word_symbol == other.word_symbol);
+  }
+
   friend std::ostream& operator<<(std::ostream& os, const AlignedWord& ali) {
     os << "WordAlignment{" << ali.word_symbol << ", " << ali.start_time << ", "
        << ali.duration << "}";
