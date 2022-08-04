@@ -239,4 +239,15 @@ TEST_CASE("Formatter can actually format stuff", "[fst][itn]") {
 
   REQUIRE_THAT(formatted_words,
                Catch::Matchers::Equals(expected_formatted_words));
+
+  const std::vector<AlignedWord> osfrv{{1178590ms, 1140ms, "og"},
+                                       {1180780ms, 390ms, "svo"},
+                                       {1181170ms, 240ms, "framvegis"}};
+
+  const std::vector<AlignedWord> expected_osfrv{
+      {1178590ms, 2820ms, "o.s.frv."}};
+
+  auto formatted_osfrv = formatter.FormatWords(osfrv);
+
+  REQUIRE_THAT(formatted_osfrv, Catch::Matchers::Equals(expected_osfrv));
 }

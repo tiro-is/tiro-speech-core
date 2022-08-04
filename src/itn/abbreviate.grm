@@ -48,7 +48,7 @@ half = Invert[half_expand];
 kjordaemi = Optimize[StringFile['src/itn/lex/kjordaemi_abbr.txt','byte','byte']];
 
 ABBR_NUMBER_11plus_and_0 = Optimize[
-                     CDRewrite[namesnumber_11plus_and_0 delspace,
+                     CDRewrite[namesnumber_11plus_and_0,
                      ("[BOS]".byte | " ".byte),
                      ("[EOS]".byte | " ".byte),
                      c.whole_alphabet*,
@@ -93,7 +93,7 @@ abbr_unit_CDafter = Optimize[
                     'obl']];
 
 abbr_half = Optimize[
-            CDRewrite[half delspace,
+            CDRewrite[half,
             c.Digits,
             (" ".byte | "[EOS]".byte),
             c.whole_alphabet*,
@@ -149,7 +149,7 @@ abbr_unit_CDbefore2 @ abbr_first_to_tenth @ abbr_half @ abbr_ratio];
 #export exp_tmp = Optimize[rewrite @ optional_exp @ EXPAND_WORD ];
 #export tmp = Invert[rewrite @ optional_exp @ word];
 ABBR_WORD = Optimize[
-                     CDRewrite[abbr delspace,
+                     CDRewrite[abbr,
                      ("[BOS]".byte | " ".byte),
                      ("[EOS]".byte | " ".byte),
                      c.whole_alphabet*,
@@ -157,7 +157,7 @@ ABBR_WORD = Optimize[
                      'obl']];
 
 ORDINAL = ArcSort[Optimize[
-                     CDRewrite[ordinal delspace,
+                     CDRewrite[ordinal,
                      ("[BOS]".byte | " ".byte),
                      ("[EOS]".byte | " ".byte),
                      c.whole_alphabet*,
@@ -171,14 +171,14 @@ abbreviate1 = Optimize[ABBR_WORD @ ORDINAL @ ABBR_NUMBER];
 # Could I here add a fst that works on the output of the first
 # one. F.ex. checks if the previous word is a number??
 
-ABBR_WORD2 = CDRewrite[abbr2 delspace,
+ABBR_WORD2 = CDRewrite[abbr2,
                      (c.Digits+ ".".byte? " ".byte),
                      ("[EOS]".byte | " ".byte),
                      c.whole_alphabet*,
                      'ltr',
                      'obl'];
 
-nr = CDRewrite[("númer".byte : "nr".byte) delspace,
+nr = CDRewrite[("númer".byte : "nr".byte),
                ("[BOS]".byte | " ".byte),
                (" ".byte c.Digits+),
                c.whole_alphabet*,
@@ -188,7 +188,7 @@ nr = CDRewrite[("númer".byte : "nr".byte) delspace,
 abbreviate2 = ArcSort[Optimize[abbreviate1 @ ABBR_WORD2 @ nr],'input'];
 
 ABBR_WORD3 = Optimize[
-                     CDRewrite[abbr3 delspace,
+                     CDRewrite[abbr3,
                      ("[BOS]".byte | " ".byte),
                      (" ".byte ("lög nr ".byte | "lögum nr ".byte |
                      "nr ".byte)? c.Digits+ ".".byte?),
@@ -196,7 +196,7 @@ ABBR_WORD3 = Optimize[
                      'ltr',
                      'obl']];
 
-ABBR_KJORDAEMI = CDRewrite[kjordaemi delspace,
+ABBR_KJORDAEMI = CDRewrite[kjordaemi,
                      (c.Digits+ ".".byte " ".byte "þingm".byte
                      c.alphabet+ " ".byte),
                      ("[EOS]".byte | " ".byte),
@@ -211,7 +211,7 @@ export ABBREVIATE = ArcSort[
 # Denormalization
 middle_name_abbr_lex = Optimize[StringFile['src/itn/lex/alphabet.txt','byte','byte']];
 middle_name_abbr = Optimize[
-                      CDRewrite[middle_name_abbr_lex delspace,
+                      CDRewrite[middle_name_abbr_lex,
                       ("[BOS]".byte | " ".byte) c.ALPHABET
                       c.alphabet+ " ".byte,
                       (c.alphabet " ".byte)? " ".byte c.ALPHABET
@@ -224,7 +224,7 @@ middle_name_abbr = Optimize[
 
 personal_names = Optimize[StringFile['src/itn/lex/ambiguous_personal_names.txt','byte','byte']];
 amb_pers_names1 = Optimize[
-                      CDRewrite[personal_names delspace,
+                      CDRewrite[personal_names,
                       ("[BOS]".byte | " ".byte),
                       " ".byte c.ALPHABET c.alphabet+ ("son".byte "ar".byte? | "syni".byte |
                       "dóttur".byte | "dóttir".byte | "sen".byte)
@@ -234,7 +234,7 @@ amb_pers_names1 = Optimize[
                       'obl']];
 
 amb_pers_names2 = Optimize[
-                      CDRewrite[personal_names delspace,
+                      CDRewrite[personal_names,
                       ("[BOS]".byte | " ".byte),
                       " ".byte c.ALPHABET c.alphabet+
                       " ".byte c.ALPHABET c.alphabet+
