@@ -136,7 +136,14 @@ abbr_ratio = Optimize[
              'ltr',
              'obl']];
 
-ABBR_NUMBER = Optimize[ABBR_NUMBER_11plus_and_0 @
+abbr_unit_hours = CDRewrite[neutralunits,
+                  "klukkan ",
+                  " " c.Digits{2} ("[EOS]" | " "),
+                  c.whole_alphabet*,
+                  'ltr',
+                  'obl'];
+
+ABBR_NUMBER = Optimize[ABBR_NUMBER_11plus_and_0 @ abbr_unit_hours @
 abbr_neutral_unit_CDbefore @  abbr_unit_CDbefore @
 abbr_neutral_unit_CDafter @ abbr_unit_CDafter @
 abbr_unit_CDbefore2 @ abbr_first_to_tenth @ abbr_half @ abbr_ratio];
