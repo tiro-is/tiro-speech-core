@@ -59,6 +59,37 @@ def compile_grm(
         tools = [tool_name],
     )
 
+def grm_export_fsts(
+        name,
+        src = None,
+        rules = [],
+        visibility = None,
+        _farextract = "@openfst//:farextract",
+):
+    """Export FSTs, i.e. rules, from FARs"""
+    if not src:
+        fail("No source FAR specified.")
+    if not rules:
+        fail("No rules specified for export.")
+
+    rules_out_suffix = ".fst"
+    native.genrule(
+        name = name,
+        srcs = [src],
+        outs = [r + rules_out_suffix for r in rules],
+        cmd = """\
+        $(location {farextract}) --filename_prefix=$(RULEDIR)/ \
+                                 --filename_suffix={suffix} \
+                                 --keys={rules}  $<
+        """.format(
+            farextract = _farextract,
+            rules = ",".join(rules),
+            suffix = rules_out_suffix,
+        ),
+        tools = [_farextract],
+        visibility = visibility,
+    )
+
 
 # # This does not work (generated FARs not in proper location in tree):
 # GrmInfo = provider(

@@ -76,10 +76,9 @@ fst::VectorFst<fst::TimingArc> ConvertToByteFst(
   }
 
   fst.SetFinal(cur_state, Arc::Weight::One());
-  fst.SetProperties(fst::kCompiledStringProperties,
-                    fst::kCompiledStringProperties);
+  fst.SetProperties(fst::kCompiledStringProperties | fst::kWeighted,
+                    fst::kCompiledStringProperties | fst::kWeighted);
 
-  fst::TopSort(&fst);
   return fst;
 }
 
@@ -148,15 +147,29 @@ fst::VectorFst<fst::StdArc> ConvertToTropicalByteFst(
   return fst;
 }
 
+namespace {
+std::int64_t StartTimeFromTimingWeight(const fst::TimingWeight& w) {
+  return static_cast<std::int64_t>(w.Value1().Value());
+}
+
+std::int64_t DurationFromTimingWeight(const fst::TimingWeight& w) {
+  return static_cast<std::int64_t>(w.Value2().Value() - w.Value1().Value());
+}
+}  // namespace
+
 std::vector<AlignedWord> Convert(const fst::VectorFst<fst::TimingArc>& fst) {
   std::vector<AlignedWord> word_alis{};
 
   AlignedWord current_ali{};
   auto current_weight = fst::TimingWeight::One();
 
+  bool last_ali_missing_time = false;
+
   for (fst::StateIterator siter(fst); !siter.Done(); siter.Next()) {
     auto state_id = siter.Value();
     for (fst::ArcIterator aiter(fst, state_id); !aiter.Done(); aiter.Next()) {
+      // NOTE: fst should be linear so there should only be at most one arc from
+      //   each state.
       const auto& arc = aiter.Value();
 
       if (arc.weight != fst::TimingWeight::One()) {
@@ -169,15 +182,35 @@ std::vector<AlignedWord> Convert(const fst::VectorFst<fst::TimingArc>& fst) {
 
       // A space begins a new ali
       if (arc.olabel == ' ') {
-        current_ali.start_time =
-            static_cast<std::int64_t>(current_weight.Value1().Value());
-        current_ali.duration = static_cast<std::int64_t>(
-            current_weight.Value2().Value() - current_weight.Value1().Value());
+        current_ali.start_time = StartTimeFromTimingWeight(current_weight);
+        current_ali.duration = DurationFromTimingWeight(current_weight);
         word_alis.push_back(current_ali);
+
+        // Handle case when current weight is One. To fix cases when
+        // multiword-to-multiword mappings cause the weight on the first word to
+        // be delayed we just look ahead until we find a weight not on a ' ' and
+        // use that as the weight for this word alignment.
+        if (current_weight == fst::TimingWeight::One()) {
+          last_ali_missing_time = true;
+        }
+
         current_ali = AlignedWord{};
         current_weight = fst::TimingWeight::One();
-      } else if (arc.olabel != 0) {
-        current_ali.word_symbol.append(1, arc.olabel);
+      } else {
+        if (arc.olabel != 0) {
+          current_ali.word_symbol.append(1, arc.olabel);
+        }
+
+        // Assume the current weight is the "missing" weight for above and reset
+        // it.
+        if (last_ali_missing_time &&
+            current_weight != fst::TimingWeight::One()) {
+          word_alis.back().start_time =
+              StartTimeFromTimingWeight(current_weight);
+          word_alis.back().duration = DurationFromTimingWeight(current_weight);
+          current_weight = fst::TimingWeight::One();
+          last_ali_missing_time = false;
+        }
       }
     }
   }

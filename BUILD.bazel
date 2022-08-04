@@ -5,7 +5,7 @@ load(
     "container_image",
     "container_bundle"
 )
-load("//tools/thrax:defs.bzl", "compile_grm")
+load("//tools/thrax:defs.bzl", "compile_grm", "grm_export_fsts")
 
 licenses(["notice"])  # Apache 2.0
 
@@ -66,6 +66,13 @@ compile_grm(
         ":numbers",
         ":ordinals",
     ] + itn_common_data,
+)
+
+grm_export_fsts(
+    name = "abbreviate_fst",
+    src = ":abbreviate",
+    rules = ["ABBREVIATE", "ITN"],
+    visibility = ["//test:__pkg__"],
 )
 
 cc_library(
