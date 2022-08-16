@@ -161,6 +161,21 @@ Which returns the following:
 
 See [examples/python/README.md](examples/python/README.md) for a Python example.
 
+## Docker images
+
+To build a Docker image bundle containing two images: tiro-speech-server and
+tiro-speech-client:
+
+    bazel build -c opt :tiro_speech_images.tar
+
+This can be loaded into Docker with:
+
+    docker load -i bazel-bin/tiro_speech_images.tar
+
+and now you can run the server with Docker:
+
+    docker run -v $PATH_TO_MODEL:/model tiro-speech-server:latest --kaldi-models=/model [ARGS]
+
 ## Development
 
 Enable the git hooks to automatically format source code:
