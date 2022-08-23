@@ -17,6 +17,7 @@
 #include <torch/script.h>
 
 #include <string>
+#include <vector>
 
 #include "src/itn/wordpiece.h"
 #include "src/options.h"
