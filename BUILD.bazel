@@ -120,6 +120,17 @@ cc_binary(
 )
 
 cc_binary(
+    name = "tiro_server_punctuate",
+    srcs = [
+        "src/bin/punctuate_main.cc",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":tiro_speech",
+    ],
+)
+
+cc_binary(
     name = "tiro_speech_server",
     srcs = [
         "src/bin/server_main.cc",
