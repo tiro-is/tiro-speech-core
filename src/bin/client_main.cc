@@ -132,12 +132,6 @@ struct ProgramOptions {
       } else if (std::string{"--interim-results"} == argv[i]) {
         interim_results = true;
         argc_--;
-      } else if (std::string{"--only-final"} == argv[i]) {
-        only_final = true;
-        argc_--;
-      } else if (std::string{"--only-timestamp-output"} == argv[i]) {
-        only_timestamp_output = true;
-        argc_--;
       } else if (std::string{"--json"} == argv[i]) {
         json = true;
         argc_--;
@@ -212,15 +206,17 @@ int templated_main(ProgramOptions& opts) {
     }
     PrintBestTranscript(res);
   } else {
-    grpc::ClientContext ctx;
+      grpc::ClientContext ctx;
     ctx.set_wait_for_ready(true);
     auto stream = stub->StreamingRecognize(&ctx);
     json json_object = {};
-    std::thread reader{[&stream, &opts, &json_object]() {
+
+    std::thread reader{[&stream, &opts, &json_object ]() {
       try {
         StreamingRecognizeResponse res;
         stream->WaitForInitialMetadata();
         int i = 0;
+
         while (stream->Read(&res)) {
           if (opts.json && res.results(0).is_final()) {
             json_object[i] = {};
@@ -243,30 +239,31 @@ int templated_main(ProgramOptions& opts) {
               json_object[i][j]["words"] = words_obj;
             }
             ++i;
-          } else if (!opts.only_final) {
-            std::cout << res.Utf8DebugString();
-          } else {
-            if (!opts.only_timestamp_output && res.results_size() > 0) {
-              if (opts.interim_results && res.results(0).is_final()) {
-                std::cout << '\r' << res.results(0).alternatives(0).transcript()
-                          << '\n';
-              } else {
-                std::string partial = "";
-                for (const auto& partial_result : res.results()) {
-                  partial += partial_result.alternatives(0).transcript();
-                }
-                std::cout << "\r" << partial;
+          }
+          else {
+          std::cerr << res.Utf8DebugString();
+          if (res.results_size() > 0) {
+            if (res.results(0).is_final()) {
+              std::cout << '\r' << res.results(0).alternatives(0).transcript()
+                        << '\n';
+            } else {
+              std::string partial = "";
+              for (const auto& partial_result : res.results()) {
+                partial += partial_result.alternatives(0).transcript();
               }
+              std::cout << "\r" << partial;
             }
           }
-          if (!opts.only_timestamp_output && !opts.json && !opts.only_final) {
-            std::cout << '\r' << res.results(0).alternatives(0).transcript()
-                      << '\n';
-          }
         }
-        std::cout << json_object.dump(2)
+        }
+        if (opts.json) {
+                 std::cout << json_object.dump(2)
                   << std::endl;  // Print the JSON objects with
                                  // an indentation of 2 spaces
+
+        }
+        std::cerr << "Done transcriping\n";
+        
       } catch (const std::exception& e) {
         std::cerr << "reader failure\n";
         std::cerr << e.what() << '\n';
@@ -333,12 +330,6 @@ int main(int argc, char* argv[]) {
         "processing.\n"
         "--interim-results             Enable interim results in the "
         "output, "
-        "only used in streaming mode.\n"
-        "--only-timestamp-output       Only output the transcript object "
-        "with"
-        "timestamps for each word. Only used in streaming mode.\n"
-        "--only-final                  Only output the final transcript"
-        "Only used in streaming mode.\n"
         "--json                        Output the transcript in JSON "
         "format. "
         "Only used in streaming mode.\n\n"
