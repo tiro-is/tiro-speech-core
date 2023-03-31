@@ -225,6 +225,7 @@ int templated_main(ProgramOptions& opts) {
               const auto& alternative = result.alternatives(j);
               const auto& words = alternative.words();
               json words_obj = json::array();
+              json_object[i][j]["transcript"] = alternative.transcript();
               for (int y = 0; y < words.size(); ++y) {
                 const auto& word_info = words.Get(y);
                 words_obj.push_back(
