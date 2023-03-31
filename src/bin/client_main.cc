@@ -21,9 +21,12 @@
 #include <functional>
 #include <iostream>
 #include <mutex>
+#include <nlohmann/json.hpp>
 #include <stdexcept>
 #include <string>
 #include <thread>
+using json = nlohmann::json;
+
 using namespace std::chrono_literals;
 
 #include "google/cloud/speech/v1/cloud_speech.grpc.pb.h"
@@ -94,7 +97,7 @@ struct ProgramOptions {
   bool interim_results = false;
   bool only_final =false;
   bool only_timestamp_output = false;
-
+  bool json = false;
 
   ProgramOptions() = default;
   ProgramOptions(int argc, char* argv[]) { Parse(argc, argv); }
@@ -134,6 +137,9 @@ struct ProgramOptions {
         argc_--;
       } else if (std::string{"--only-timestamp-output"} == argv[i]) {
         only_timestamp_output = true;
+        argc_--;
+      } else if (std::string{"--json"} == argv[i]) {
+        json = true;
         argc_--;
       } else {
         std::cerr << "Invalid option\n";
@@ -209,30 +215,58 @@ int templated_main(ProgramOptions& opts) {
     grpc::ClientContext ctx;
     ctx.set_wait_for_ready(true);
     auto stream = stub->StreamingRecognize(&ctx);
-
-    std::thread reader{[&stream, &opts]() {
+    json json_object = {};
+    std::thread reader{[&stream, &opts, &json_object]() {
       try {
         StreamingRecognizeResponse res;
         stream->WaitForInitialMetadata();
-
+        int i = 0;
         while (stream->Read(&res)) {
-          if (!opts.only_final) {
-            std::cout << res.Utf8DebugString();
-          }
-          if (!opts.only_timestamp_output && res.results_size() > 0) {
-            if (opts.interim_results && res.results(0).is_final()){
-              std::cout << '\r' << res.results(0).alternatives(0).transcript()
-                        << '\n';
-            } 
-            else {
-              std::string partial = "";
-              for (const auto& partial_result : res.results()) {
-                partial += partial_result.alternatives(0).transcript();
+          if (opts.json && res.results(0).is_final()) {
+            json_object[i] = {};
+            const auto& result = res.results(0);
+            for (int j = 0; j < result.alternatives_size(); ++j) {
+              const auto& alternative = result.alternatives(j);
+              const auto& words = alternative.words();
+              json words_obj = json::array();
+              for (int y = 0; y < words.size(); ++y) {
+                const auto& word_info = words.Get(y);
+                words_obj.push_back(
+                    {{"word", word_info.word()},
+                     {"start_time",
+                      {{"seconds", word_info.start_time().seconds()},
+                       {"nanos", word_info.start_time().nanos()}}},
+                     {"end_time",
+                      {{"seconds", word_info.end_time().seconds()},
+                       {"nanos", word_info.end_time().nanos()}}}});
               }
-              std::cout << "\r" << partial;
+              json_object[i][j]["words"] = words_obj;
+            }
+            ++i;
+          } else if (!opts.only_final) {
+            std::cout << res.Utf8DebugString();
+          } else {
+            if (!opts.only_timestamp_output && res.results_size() > 0) {
+              if (opts.interim_results && res.results(0).is_final()) {
+                std::cout << '\r' << res.results(0).alternatives(0).transcript()
+                          << '\n';
+              } else {
+                std::string partial = "";
+                for (const auto& partial_result : res.results()) {
+                  partial += partial_result.alternatives(0).transcript();
+                }
+                std::cout << "\r" << partial;
+              }
             }
           }
+          if (!opts.only_timestamp_output && !opts.json && !opts.only_final) {
+            std::cout << '\r' << res.results(0).alternatives(0).transcript()
+                      << '\n';
+          }
         }
+        std::cout << json_object.dump(2)
+                  << std::endl;  // Print the JSON objects with
+                                 // an indentation of 2 spaces
       } catch (const std::exception& e) {
         std::cerr << "reader failure\n";
         std::cerr << e.what() << '\n';
@@ -261,7 +295,7 @@ int templated_main(ProgramOptions& opts) {
     while (!wave_stream
                 .read(req.mutable_audio_content()->data(),
                       content_chunk_size_bytes)
-                .eof()){
+                .eof()) {
       if (!stream->Write(req)) {
         std::cerr << "Write failed\n";
         return EXIT_FAILURE;
@@ -285,19 +319,28 @@ int main(int argc, char* argv[]) {
         "usage: tiro_speech_client [options] wave-filename "
         "[recognition_config_pb "
         "[host:port]] \n"
-        " e.g. tiro-speech-core --use-ssl example.wav example_config.pbtxt "
+        " e.g. tiro-speech-core --use-ssl example.wav "
+        "example_config.pbtxt "
         "localhost:50051\n\n"
         "Options:\n\n"
-        "--use-ssl                     Enable SSL for secure communication.\n"
+        "--use-ssl                     Enable SSL for secure "
+        "communication.\n"
         "--streaming                   Enable streaming mode.\n"
         "--help                        Display this help message.\n"
-        "--punctuation                 Enable punctuation in the output.\n"
-        "--use-google-cloud-api        Use the Google Cloud API for processing.\n"
-        "--interim-results             Enable interim results in the output, " 
+        "--punctuation                 Enable punctuation in the "
+        "output.\n"
+        "--use-google-cloud-api        Use the Google Cloud API for "
+        "processing.\n"
+        "--interim-results             Enable interim results in the "
+        "output, "
         "only used in streaming mode.\n"
-        "--only-timestamp-output       Only output the transcript object with" 
+        "--only-timestamp-output       Only output the transcript object "
+        "with"
         "timestamps for each word. Only used in streaming mode.\n"
         "--only-final                  Only output the final transcript"
+        "Only used in streaming mode.\n"
+        "--json                        Output the transcript in JSON "
+        "format. "
         "Only used in streaming mode.\n\n"
         "Example config.pbtxt file:\n\n"
         "encoding: LINEAR16\n"
@@ -305,8 +348,7 @@ int main(int argc, char* argv[]) {
         "language_code: 'is-IS'\n"
         "max_alternatives: 2\n"
         "enable_word_time_offsets: true\n"
-        "enable_automatic_punctuation: true"
-        };
+        "enable_automatic_punctuation: true"};
     ProgramOptions opts{argc, argv};
 
     if (opts.print_help) {
