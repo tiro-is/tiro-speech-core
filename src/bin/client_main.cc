@@ -21,9 +21,12 @@
 #include <functional>
 #include <iostream>
 #include <mutex>
+#include <nlohmann/json.hpp>
 #include <stdexcept>
 #include <string>
 #include <thread>
+using json = nlohmann::json;
+
 using namespace std::chrono_literals;
 
 #include "google/cloud/speech/v1/cloud_speech.grpc.pb.h"
@@ -92,6 +95,9 @@ struct ProgramOptions {
   bool punctuation = false;
   bool use_google_cloud_api = false;
   bool interim_results = false;
+  bool only_final =false;
+  bool only_timestamp_output = false;
+  bool json = false;
 
   ProgramOptions() = default;
   ProgramOptions(int argc, char* argv[]) { Parse(argc, argv); }
@@ -126,6 +132,9 @@ struct ProgramOptions {
       } else if (std::string{"--interim-results"} == argv[i]) {
         interim_results = true;
         argc_--;
+      } else if (std::string{"--json"} == argv[i]) {
+        json = true;
+        argc_--;
       } else {
         std::cerr << "Invalid option\n";
         exit(EXIT_FAILURE);
@@ -134,88 +143,6 @@ struct ProgramOptions {
   }
 };
 
-// // Example async client:
-// class Streamer
-//     : grpc::experimental::ClientBidiReactor<StreamingRecognizeRequest,
-//                                             StreamingRecognizeResponse> {
-//  public:
-//   explicit Streamer(Speech::Stub* stub, const RecognitionConfig& config,
-//                     std::string&& audio_content)
-//       : audio_content_{audio_content} {
-//     stub->experimental_async()->StreamingRecognize(&ctx_, this);
-//
-//     req_.mutable_streaming_config()->mutable_config()->CopyFrom(config);
-//     req_.mutable_streaming_config()->set_interim_results(true);
-//
-//     StartRead(&res_);
-//     FirstWrite();
-//     StartCall();
-//   }
-//
-//   grpc::Status Wait() {
-//     std::unique_lock<std::mutex> l{mu_};
-//     cv_.wait(l, [this] { return done_; });
-//     return std::move(status_);
-//   }
-//
-//   void OnDone(const grpc::Status& stat) override {
-//     {
-//       std::lock_guard<std::mutex> l{mu_};
-//       status_ = stat;
-//       done_ = true;
-//     }
-//     cv_.notify_one();
-//   }
-//
-//   void OnReadDone(bool ok) override {
-//     if (ok) {
-//       std::cerr << res_.Utf8DebugString();
-//       if (res_.results().size() > 0 && res_.results(0).is_final()) {
-//         PrintBestTranscript(res_);
-//       }
-//       StartRead(&res_);
-//     }
-//   }
-//
-//   void OnWriteDone(bool ok) override {
-//     NextWrite();
-//   }
-//
-//  private:
-//   grpc::ClientContext ctx_;
-//   StreamingRecognizeResponse res_;
-//   StreamingRecognizeRequest req_;
-//   StreamingRecognitionConfig streaming_config_;
-//
-//   std::mutex mu_;
-//   std::condition_variable cv_;
-//   bool done_ = false;
-//   grpc::Status status_;
-//
-//   void FirstWrite() {
-//     StartWrite(&req_);
-//   }
-//
-//   std::chrono::milliseconds delay_{50};
-//   std::string audio_content_;
-//   std::size_t content_byte_offset_ = 0;
-//   std::size_t content_chunk_size_ = 1024;
-//
-//   void NextWrite() {
-//     if (content_byte_offset_ >= audio_content_.size()) {
-//       StartWritesDone();
-//     } else {
-//       std::string chunk = audio_content_.substr(
-//           content_byte_offset_,
-//           std::min(content_chunk_size_ * 2,
-//                    audio_content_.size() - content_byte_offset_));
-//       req_.set_audio_content(std::move(chunk));
-//       content_byte_offset_ += content_chunk_size_ * 2;
-//       StartWrite(&req_);
-//       std::this_thread::sleep_for(delay_);
-//     }
-//   }
-// };
 
 template <typename RecognitionConfig, typename Speech,
           typename RecognitionAudio, typename RecognizeRequest,
@@ -256,6 +183,7 @@ int templated_main(ProgramOptions& opts) {
   }
   auto stub = Speech::NewStub(grpc::CreateChannel(address, creds));
 
+ 
   if (!opts.streaming) {
     RecognizeRequest req;
     req.mutable_config()->CopyFrom(config);
@@ -278,22 +206,42 @@ int templated_main(ProgramOptions& opts) {
     }
     PrintBestTranscript(res);
   } else {
-    // Streamer streamer{&*stub, config, GetFileContents(wave_filename)};
-    // grpc::Status stat = streamer.Wait();
-    // if (!stat.ok()) {
-    //   std::cerr << "Stream failed.\n";
-    //   PrintErrorWithDetails(stat);
-    //   return EXIT_FAILURE;
-    // }
-    grpc::ClientContext ctx;
+      grpc::ClientContext ctx;
     ctx.set_wait_for_ready(true);
     auto stream = stub->StreamingRecognize(&ctx);
+    json json_object = {};
 
-    std::thread reader{[&stream]() {
+    std::thread reader{[&stream, &opts, &json_object ]() {
       try {
         StreamingRecognizeResponse res;
         stream->WaitForInitialMetadata();
+        int i = 0;
+
         while (stream->Read(&res)) {
+          if (opts.json && res.results(0).is_final()) {
+            json_object[i] = {};
+            const auto& result = res.results(0);
+            for (int j = 0; j < result.alternatives_size(); ++j) {
+              const auto& alternative = result.alternatives(j);
+              const auto& words = alternative.words();
+              json words_obj = json::array();
+              json_object[i][j]["transcript"] = alternative.transcript();
+              for (int y = 0; y < words.size(); ++y) {
+                const auto& word_info = words.Get(y);
+                words_obj.push_back(
+                    {{"word", word_info.word()},
+                     {"start_time",
+                      {{"seconds", word_info.start_time().seconds()},
+                       {"nanos", word_info.start_time().nanos()}}},
+                     {"end_time",
+                      {{"seconds", word_info.end_time().seconds()},
+                       {"nanos", word_info.end_time().nanos()}}}});
+              }
+              json_object[i][j]["words"] = words_obj;
+            }
+            ++i;
+          }
+          else {
           std::cerr << res.Utf8DebugString();
           if (res.results_size() > 0) {
             if (res.results(0).is_final()) {
@@ -308,7 +256,15 @@ int templated_main(ProgramOptions& opts) {
             }
           }
         }
-        std::cerr << "done reading\n";
+        }
+        if (opts.json) {
+                 std::cout << json_object.dump(2)
+                  << std::endl;  // Print the JSON objects with
+                                 // an indentation of 2 spaces
+
+        }
+        std::cerr << "Done transcriping\n";
+        
       } catch (const std::exception& e) {
         std::cerr << "reader failure\n";
         std::cerr << e.what() << '\n';
@@ -361,9 +317,30 @@ int main(int argc, char* argv[]) {
         "usage: tiro_speech_client [options] wave-filename "
         "[recognition_config_pb "
         "[host:port]] \n"
-        " e.g. lr-speech-client --use-ssl example.wav example_config.pbtxt "
-        "localhost:50051"};
-
+        " e.g. tiro-speech-core --use-ssl example.wav "
+        "example_config.pbtxt "
+        "localhost:50051\n\n"
+        "Options:\n\n"
+        "--use-ssl                     Enable SSL for secure "
+        "communication.\n"
+        "--streaming                   Enable streaming mode.\n"
+        "--help                        Display this help message.\n"
+        "--punctuation                 Enable punctuation in the "
+        "output.\n"
+        "--use-google-cloud-api        Use the Google Cloud API for "
+        "processing.\n"
+        "--interim-results             Enable interim results in the "
+        "output, "
+        "--json                        Output the transcript in JSON "
+        "format. "
+        "Only used in streaming mode.\n\n"
+        "Example config.pbtxt file:\n\n"
+        "encoding: LINEAR16\n"
+        "sample_rate_hertz: 16000\n"
+        "language_code: 'is-IS'\n"
+        "max_alternatives: 2\n"
+        "enable_word_time_offsets: true\n"
+        "enable_automatic_punctuation: true"};
     ProgramOptions opts{argc, argv};
 
     if (opts.print_help) {
